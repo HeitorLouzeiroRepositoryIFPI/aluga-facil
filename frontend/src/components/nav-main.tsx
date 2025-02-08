@@ -1,6 +1,8 @@
-"use client"
+"use client";
 
 import { ChevronRight, type LucideIcon } from "lucide-react"
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 import {
   Collapsible,
@@ -18,23 +20,56 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 
-export function NavMain({
-  items,
-}: {
-  items: {
-    title: string
-    url: string
-    icon?: LucideIcon
-    isActive?: boolean
-    items?: {
-      title: string
-      url: string
-    }[]
-  }[]
-}) {
+interface NavItem {
+  title: string;
+  icon: LucideIcon;
+  isActive?: boolean;
+  children?: {
+    title: string;
+    href: string;
+  }[];
+}
+
+const adminItems: NavItem[] = [
+  {
+    title: "Gestão",
+    icon: ChevronRight,
+    isActive: true,
+    children: [
+      { title: "Imóveis", href: "/dashboard/imoveis" },
+      { title: "Contratos", href: "/dashboard/contratos" },
+      { title: "Pagamentos", href: "/dashboard/pagamentos" },
+    ],
+  },
+];
+
+const clientItems: NavItem[] = [
+  {
+    title: "Minha Conta",
+    icon: ChevronRight,
+    isActive: true,
+    children: [
+      { title: "Meus Aluguéis", href: "/dashboard/meus-alugueis" },
+      { title: "Pagamentos", href: "/dashboard/meus-pagamentos" },
+    ],
+  },
+];
+
+const NavMain = () => {
+  const router = useRouter();
+  const { userType } = useAuth();
+
+  const items = userType === 'admin' ? adminItems : clientItems;
+
+  const handleRedirect = (url: string) => {
+    router.push(url);
+  };
+
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarGroupLabel>
+        {userType === 'admin' ? 'Administração' : 'Menu'}
+      </SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <Collapsible
@@ -53,12 +88,12 @@ export function NavMain({
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <SidebarMenuSub>
-                  {item.items?.map((subItem) => (
+                  {item.children?.map((subItem) => (
                     <SidebarMenuSubItem key={subItem.title}>
-                      <SidebarMenuSubButton asChild>
-                        <a href={subItem.url}>
-                          <span>{subItem.title}</span>
-                        </a>
+                      <SidebarMenuSubButton 
+                        onClick={() => handleRedirect(subItem.href)}
+                      >
+                        <span>{subItem.title}</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   ))}
@@ -71,3 +106,5 @@ export function NavMain({
     </SidebarGroup>
   )
 }
+
+export default NavMain;
