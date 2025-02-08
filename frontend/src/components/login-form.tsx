@@ -1,37 +1,40 @@
 'use client';
 
 import React, { useState } from 'react';
-import { auth } from '@/lib/api';
 import { GalleryVerticalEnd } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useRouter } from 'next/navigation';
+import { useAuthentication } from '@/hooks/useAuthentication';
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const router = useRouter();
+  const { login } = useAuthentication();
   const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Impede o refresh da página
-    setLoading(true); // Inicia o carregamento
-    setError(''); // Limpa mensagens de erro anteriores
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
     try {
-      const response = await auth.login({ email, senha }); // Usando o método auth.login
-      // Armazenar o token JWT
-      localStorage.setItem('token', response.token);
-      // Redirecionar ou atualizar o estado de autenticação
-      console.log('Login bem-sucedido:', response);
-      // Aqui você pode redirecionar o usuário ou atualizar o estado
-    } catch (err) {
-      setError('Login falhou. Verifique suas credenciais.');
+      const success = await login(email, password);
+      if (!success) {
+        setError('Email ou senha inválidos');
+      }
+    } catch (error) {
+      console.error('Erro ao fazer login:', error);
+      setError('Ocorreu um erro ao tentar fazer login');
     } finally {
-      setLoading(false); // Finaliza o carregamento
+      setLoading(false);
     }
   };
 
@@ -70,22 +73,29 @@ export function LoginForm({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="senha">Senha</Label>
+              <Label htmlFor="password">Senha</Label>
               <Input
-                id="senha"
+                id="password"
                 type="password"
                 placeholder="Digite sua senha"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>  
-              {loading ? 'Carregando...' : 'Login'}
+              {loading ? (
+                <>
+                  <GalleryVerticalEnd className="mr-2 h-4 w-4 animate-spin" />
+                  Entrando...
+                </>
+              ) : (
+                'Entrar'
+              )}
             </Button>
           </div>
           {error && (
-            <div className="text-center">
+            <div className="text-center text-sm text-red-500">
               <p className="text-red-500 mt-2">{error}</p>
             </div>
           )}
@@ -123,3 +133,5 @@ export function LoginForm({
     </div>
   )
 }
+
+export default LoginForm;
