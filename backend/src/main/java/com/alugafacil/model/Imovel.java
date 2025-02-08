@@ -47,8 +47,8 @@ public class Imovel {
     private List<String> fotos;
     
     @ManyToOne
-    @JoinColumn(name = "proprietario_id", nullable = false)
-    private Proprietario proprietario;
+    @JoinColumn(name = "administrador_id", nullable = false)
+    private Administrador administrador;
     
     @OneToMany(mappedBy = "imovel")
     private List<Aluguel> alugueis;

@@ -33,10 +33,10 @@ public abstract class Usuario implements UserDetails {
     
     @Column(nullable = false)
     private String senha;
-    
+
     @Column(nullable = false)
     private String tipo;
-
+    
     // Setter para o atributo 'tipo'
     public void setTipo(String tipo) {
         this.tipo = tipo;
@@ -44,7 +44,7 @@ public abstract class Usuario implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + tipo));
+        return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
     }
 
     @Override

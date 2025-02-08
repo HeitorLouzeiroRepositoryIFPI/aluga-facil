@@ -2,8 +2,8 @@ package com.alugafacil.service;
 
 import com.alugafacil.exception.BusinessException;
 import com.alugafacil.exception.ResourceNotFoundException;
+import com.alugafacil.model.Administrador;
 import com.alugafacil.model.Imovel;
-import com.alugafacil.model.Proprietario;
 import com.alugafacil.repository.ImovelRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,12 +17,12 @@ import java.util.UUID;
 public class ImovelService {
     
     private final ImovelRepository imovelRepository;
-    private final ProprietarioService proprietarioService;
+    private final AdministradorService administradorService;
     
     @Transactional
-    public Imovel cadastrar(Imovel imovel, Long proprietarioId) {
-        Proprietario proprietario = proprietarioService.buscarPorId(proprietarioId);
-        imovel.setProprietario(proprietario);
+    public Imovel cadastrar(Imovel imovel, Long administradorId) {
+        Administrador administrador = administradorService.buscarPorId(administradorId);
+        imovel.setAdministrador(administrador);
         imovel.setCodigo(UUID.randomUUID().toString());
         return imovelRepository.save(imovel);
     }
@@ -41,9 +41,9 @@ public class ImovelService {
         return imovelRepository.findAll();
     }
     
-    public List<Imovel> listarPorProprietario(Long proprietarioId) {
-        Proprietario proprietario = proprietarioService.buscarPorId(proprietarioId);
-        return imovelRepository.findByProprietario(proprietario);
+    public List<Imovel> listarPorAdministrador(Long administradorId) {
+        Administrador administrador = administradorService.buscarPorId(administradorId);
+        return imovelRepository.findByAdministrador(administrador);
     }
     
     public List<Imovel> listarPorStatus(String status) {
@@ -64,7 +64,7 @@ public class ImovelService {
         
         imovel.setId(id);
         imovel.setCodigo(imovelExistente.getCodigo());
-        imovel.setProprietario(imovelExistente.getProprietario());
+        imovel.setAdministrador(imovelExistente.getAdministrador());
         
         return imovelRepository.save(imovel);
     }

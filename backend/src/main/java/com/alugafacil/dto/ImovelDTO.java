@@ -34,5 +34,5 @@ public class ImovelDTO {
     private String tipo;
     
     private List<String> fotos;
-    private Long proprietarioId;
+    private Long administradorId;
 }

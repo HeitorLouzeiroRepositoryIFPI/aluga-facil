@@ -30,7 +30,7 @@ public class ImovelController {
         imovel.setStatus("DISPONIVEL");
         
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(imovelService.cadastrar(imovel, dto.getProprietarioId()));
+                .body(imovelService.cadastrar(imovel, dto.getAdministradorId()));
     }
     
     @GetMapping("/{id}")
@@ -48,9 +48,9 @@ public class ImovelController {
         return ResponseEntity.ok(imovelService.listarTodos());
     }
     
-    @GetMapping("/proprietario/{proprietarioId}")
-    public ResponseEntity<List<Imovel>> listarPorProprietario(@PathVariable Long proprietarioId) {
-        return ResponseEntity.ok(imovelService.listarPorProprietario(proprietarioId));
+    @GetMapping("/administrador/{administradorId}")
+    public ResponseEntity<List<Imovel>> listarPorAdministrador(@PathVariable Long administradorId) {
+        return ResponseEntity.ok(imovelService.listarPorAdministrador(administradorId));
     }
     
     @GetMapping("/status/{status}")
