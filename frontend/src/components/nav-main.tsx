@@ -36,9 +36,9 @@ const adminItems: NavItem[] = [
     icon: ChevronRight,
     isActive: true,
     children: [
-      { title: "Imóveis", href: "/dashboard/imoveis" },
-      { title: "Contratos", href: "/dashboard/contratos" },
-      { title: "Pagamentos", href: "/dashboard/pagamentos" },
+      { title: "Imóveis", href: "dashboard/imoveis" },
+      { title: "Contratos", href: "dashboard/contratos" },
+      { title: "Pagamentos", href: "dashboard/pagamentos" },
     ],
   },
 ];
