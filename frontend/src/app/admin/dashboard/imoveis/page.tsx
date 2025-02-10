@@ -5,8 +5,10 @@ import { ImoveisService, Imovel } from "@/services/imoveis";
 import { FiSearch, FiPlus, FiFilter, FiRefreshCw } from 'react-icons/fi';
 import { ProtectedRoute } from "@/components/protected-route";
 import DashboardLayout from "@/app/dashboard/DashboardLayout";
+import { useRouter } from "next/navigation";
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [imoveis, setImoveis] = useState<Imovel[]>([]);
   const [filteredImoveis, setFilteredImoveis] = useState<Imovel[]>([]);
   const [loading, setLoading] = useState(false);
@@ -118,13 +120,22 @@ export default function AdminDashboard() {
     <div className="container mx-auto p-4 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-800">Dashboard de Imóveis</h1>
-        <button
-          onClick={() => carregarImoveis()}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-        >
-          <FiRefreshCw className="w-4 h-4" />
-          Atualizar
-        </button>
+        <div className="flex gap-4">
+          <button
+            onClick={() => router.push('/admin/dashboard/imoveis/cadastrar')}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors"
+          >
+            <FiPlus className="w-4 h-4" />
+            Cadastrar Imóvel
+          </button>
+          <button
+            onClick={() => carregarImoveis()}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          >
+            <FiRefreshCw className="w-4 h-4" />
+            Atualizar
+          </button>
+        </div>
       </div>
       
       {/* Stats Cards */}
