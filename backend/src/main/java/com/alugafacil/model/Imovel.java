@@ -1,5 +1,6 @@
 package com.alugafacil.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -48,6 +49,7 @@ public class Imovel {
     
     @ManyToOne
     @JoinColumn(name = "administrador_id", nullable = false)
+    @JsonBackReference
     private Administrador administrador;
     
     @OneToMany(mappedBy = "imovel")

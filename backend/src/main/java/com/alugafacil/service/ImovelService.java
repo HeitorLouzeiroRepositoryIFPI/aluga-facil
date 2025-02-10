@@ -70,10 +70,10 @@ public class ImovelService {
     }
     
     @Transactional
-    public void atualizarStatus(Long id, String status) {
+    public Imovel atualizarStatus(Long id, String status) {
         Imovel imovel = buscarPorId(id);
         imovel.setStatus(status);
-        imovelRepository.save(imovel);
+        return imovelRepository.save(imovel);
     }
     
     @Transactional
