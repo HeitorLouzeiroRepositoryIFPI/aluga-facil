@@ -188,6 +188,8 @@ export default function AdminDashboard() {
             <option value="TODOS">Todos os Tipos</option>
             <option value="CASA">Casa</option>
             <option value="APARTAMENTO">Apartamento</option>
+            <option value="TERRENO">Terreno</option>
+            <option value="SALA_COMERCIAL">Sala Comercial</option>
             <option value="COMERCIAL">Comercial</option>
           </select>
         </div>

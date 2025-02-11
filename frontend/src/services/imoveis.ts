@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { UploadService } from './upload';
 
 const api = axios.create({
   baseURL: 'http://localhost:8080/api',
@@ -216,14 +217,25 @@ export const ImoveisService = {
     }
   },
 
-  cadastrar: async (imovel: ImovelDTO) => {
+  cadastrar: async (imovel: ImovelDTO, fotos?: File[]) => {
     try {
+      // Se houver fotos, faz o upload primeiro
+      if (fotos && fotos.length > 0) {
+        console.log('Iniciando upload de fotos...');
+        const uploadResults = await UploadService.uploadMultiplasFotos(fotos);
+        const fotosUrls = uploadResults
+          .filter((result) => result.success)
+          .map((result) => result.url);
+        console.log('URLs das fotos após upload:', fotosUrls);
+        imovel.fotos = fotosUrls;
+      }
+
       const response = await api.post<any>('/imoveis', imovel);
       console.log('Response from cadastrar:', response.data);
       return normalizeImovel(response.data);
     } catch (error) {
       console.error('Erro ao cadastrar imóvel:', error);
-      return getDefaultImovel();
+      throw error;
     }
   },
 
