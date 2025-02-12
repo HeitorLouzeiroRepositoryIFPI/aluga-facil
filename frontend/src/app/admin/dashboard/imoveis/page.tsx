@@ -203,6 +203,8 @@ export default function AdminDashboard() {
           >
             <option value="TODOS">Todos os Status</option>
             <option value="DISPONIVEL">Disponível</option>
+            <option value="RESERVADO">Reservado</option>
+            <option value="MANUTENCAO">Em Manutenção</option>
             <option value="ALUGADO">Alugado</option>
           </select>
           <select
