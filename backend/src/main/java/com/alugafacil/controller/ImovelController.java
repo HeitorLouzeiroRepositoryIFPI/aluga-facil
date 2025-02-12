@@ -129,12 +129,12 @@ public class ImovelController {
         }
     }
     
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
-        if (imovelService.buscarPorId(id) == null) {
+    @DeleteMapping("/{codigo}")
+    public ResponseEntity<Void> excluir(@PathVariable String codigo) {
+        if (imovelService.buscarPorCodigo(codigo) == null) {
             return ResponseEntity.notFound().build();
         }
-        imovelService.excluir(id);
+        imovelService.excluirPorCodigo(codigo);
         return ResponseEntity.noContent().build();
     }
 }

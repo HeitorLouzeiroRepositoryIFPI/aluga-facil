@@ -2,13 +2,38 @@
 
 import { useEffect, useState } from "react";
 import { ImoveisService, Imovel } from "@/services/imoveis";
-import { FiSearch, FiPlus, FiFilter, FiRefreshCw } from 'react-icons/fi';
+import { FiSearch, FiPlus, FiFilter, FiRefreshCw, FiEdit, FiTrash2 } from 'react-icons/fi';
 import { ProtectedRoute } from "@/components/protected-route";
 import DashboardLayout from "@/app/dashboard/DashboardLayout";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [imovelToDelete, setImovelToDelete] = useState<string | null>(null);
+
+  const handleDelete = (codigo: string) => {
+    setImovelToDelete(codigo);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!imovelToDelete) return;
+
+    try {
+      await ImoveisService.excluir(imovelToDelete);
+      toast.success('Imóvel excluído com sucesso!');
+      carregarImoveis();
+    } catch (error) {
+      console.error('Erro ao excluir imóvel:', error);
+      toast.error('Erro ao excluir imóvel');
+    } finally {
+      setDeleteModalOpen(false);
+      setImovelToDelete(null);
+    }
+  };
+
   const [imoveis, setImoveis] = useState<Imovel[]>([]);
   const [filteredImoveis, setFilteredImoveis] = useState<Imovel[]>([]);
   const [loading, setLoading] = useState(false);
@@ -229,6 +254,9 @@ export default function AdminDashboard() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Valor Mensal
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Ações
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -276,6 +304,22 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 font-medium">
                       {formatCurrency(imovel.valorMensal)}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium">
+                      <div className="flex space-x-3">
+                        <button
+                          onClick={() => router.push(`/admin/dashboard/imoveis/editar/${imovel.codigo}`)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          <FiEdit className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(imovel.codigo)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <FiTrash2 className="h-5 w-5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -349,6 +393,33 @@ export default function AdminDashboard() {
         )}
       </div>
     </div>
+      {/* Modal de Confirmação de Exclusão */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Confirmar Exclusão
+            </h3>
+            <p className="text-sm text-gray-500 mb-6">
+              Tem certeza que deseja excluir este imóvel? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
     </ProtectedRoute>
   );
