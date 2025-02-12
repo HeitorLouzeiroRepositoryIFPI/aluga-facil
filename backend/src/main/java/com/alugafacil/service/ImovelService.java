@@ -68,6 +68,17 @@ public class ImovelService {
         
         return imovelRepository.save(imovel);
     }
+
+    @Transactional
+    public Imovel atualizarPorCodigo(String codigo, Imovel imovel) {
+        Imovel imovelExistente = buscarPorCodigo(codigo);
+        
+        imovel.setId(imovelExistente.getId());
+        imovel.setCodigo(codigo);
+        imovel.setAdministrador(imovelExistente.getAdministrador());
+        
+        return imovelRepository.save(imovel);
+    }
     
     @Transactional
     public Imovel atualizarStatus(Long id, String status) {

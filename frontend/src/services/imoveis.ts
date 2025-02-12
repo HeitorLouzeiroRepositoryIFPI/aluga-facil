@@ -95,6 +95,44 @@ const getDefaultImovel = (): Imovel => ({
 });
 
 export const ImoveisService = {
+  async buscarPorCodigo(codigo: string): Promise<ImovelDTO> {
+    const response = await api.get(`/imoveis/${codigo}`);
+    return response.data;
+  },
+
+  async atualizar(codigo: string, imovel: ImovelDTO): Promise<ImovelDTO> {
+    const response = await api.put(`/imoveis/${codigo}`, imovel);
+    return response.data;
+  },
+
+  async atualizarComFotos(codigo: string, imovel: ImovelDTO, fotos: File[]): Promise<ImovelDTO> {
+    // Primeiro faz upload das fotos
+    const fotosUrls = await Promise.all(
+      fotos.map(async (foto) => {
+        const formData = new FormData();
+        formData.append('file', foto);
+        const response = await api.post('/upload', formData);
+        return response.data.url;
+      })
+    );
+
+    // Atualiza o imóvel com as novas fotos
+    const imovelComFotos = {
+      ...imovel,
+      fotos: [...imovel.fotos, ...fotosUrls],
+    };
+
+    return await ImoveisService.atualizar(codigo, imovelComFotos);
+  },
+
+  async removerFoto(codigo: string, url: string): Promise<void> {
+    await api.delete(`/imoveis/${codigo}/fotos`, { data: { url } });
+  },
+
+  async excluir(codigo: string): Promise<void> {
+    await api.delete(`/imoveis/${codigo}`);
+  },
+
   listarTodos: async () => {
     try {
       const response = await api.get<any[]>('/imoveis');
@@ -255,8 +293,8 @@ export const ImoveisService = {
     await api.patch(`/imoveis/${id}/status?status=${status}`);
   },
 
-  excluir: async (id: number) => {
-    console.log('Excluindo imóvel com id', id);
-    await api.delete(`/imoveis/${id}`);
+  excluir: async (codigo: string) => {
+    console.log('Excluindo imóvel com código', codigo);
+    await api.delete(`/imoveis/${codigo}`);
   }
 };

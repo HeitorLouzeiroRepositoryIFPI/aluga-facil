@@ -101,9 +101,9 @@ public class ImovelController {
         return ResponseEntity.ok(dtos);
     }
     
-    @PutMapping("/{id}")
-    public ResponseEntity<ImovelResponseDTO> atualizar(@PathVariable Long id, @Valid @RequestBody ImovelDTO dto) {
-        Imovel imovelExistente = imovelService.buscarPorId(id);
+    @PutMapping("/{codigo}")
+    public ResponseEntity<ImovelResponseDTO> atualizar(@PathVariable String codigo, @Valid @RequestBody ImovelDTO dto) {
+        Imovel imovelExistente = imovelService.buscarPorCodigo(codigo);
         if (imovelExistente == null) {
             return ResponseEntity.notFound().build();
         }
@@ -113,9 +113,10 @@ public class ImovelController {
         imovelExistente.setDescricao(dto.getDescricao());
         imovelExistente.setValorMensal(dto.getValorMensal());
         imovelExistente.setTipo(dto.getTipo());
+        imovelExistente.setStatus(dto.getStatus());
         imovelExistente.setFotos(dto.getFotos());
         
-        Imovel imovelAtualizado = imovelService.atualizar(id, imovelExistente);
+        Imovel imovelAtualizado = imovelService.atualizarPorCodigo(codigo, imovelExistente);
         return ResponseEntity.ok(ImovelResponseDTO.fromEntity(imovelAtualizado));
     }
     
