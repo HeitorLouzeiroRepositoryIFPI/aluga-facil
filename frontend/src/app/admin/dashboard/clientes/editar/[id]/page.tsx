@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { use } from "react";
 import EditarClienteForm from "./components/EditarClienteForm";
 
 interface EditarClientePageProps {
@@ -13,6 +14,7 @@ interface EditarClientePageProps {
 export default function EditarClientePage({ params }: EditarClientePageProps) {
   const router = useRouter();
   const { user, userType } = useAuth();
+  const { id } = use(params);
 
   if (!user || userType !== 'admin') {
     router.push('/login');
@@ -20,11 +22,9 @@ export default function EditarClientePage({ params }: EditarClientePageProps) {
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Editar Cliente</h1>
-      </div>
-      <EditarClienteForm id={parseInt(params.id)} />
+    <div className="container mx-auto py-6">
+      <h1 className="text-2xl font-bold mb-6">Editar Cliente</h1>
+      <EditarClienteForm id={parseInt(id)} />
     </div>
   );
 }
