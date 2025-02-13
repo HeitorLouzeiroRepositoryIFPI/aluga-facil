@@ -14,6 +14,21 @@ import java.util.List;
 @PrimaryKeyJoinColumn(name = "usuario_id")
 public class Cliente extends Usuario {
     
+    @Column(nullable = false)
+    private String cpf;
+    
+    @Column(nullable = false)
+    private String telefone;
+    
+    @Column(nullable = false)
+    private String endereco;
+    
+    @Column(nullable = false)
+    private String dataNascimento;
+    
+    @Column(nullable = false)
+    private String status;
+    
     @OneToMany(mappedBy = "cliente")
     private List<Aluguel> alugueis;
     
@@ -23,5 +38,6 @@ public class Cliente extends Usuario {
     public Cliente() {
         super();
         setTipo("CLIENTE");
+        this.status = "ATIVO";
     }
 }

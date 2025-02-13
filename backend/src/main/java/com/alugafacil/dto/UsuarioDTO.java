@@ -17,4 +17,7 @@ public class UsuarioDTO {
     
     @NotBlank(message = "Senha é obrigatória")
     private String senha;
+
+    @NotBlank(message = "CPF é obrigatório")
+    private String cpf;
 }

@@ -34,4 +34,8 @@ public class UsuarioService implements UserDetailsService {
     public boolean existeEmail(String email) {
         return usuarioRepository.existsByEmail(email);
     }
+
+    public boolean existeCpf(String cpf) {
+        return usuarioRepository.existsByCpf(cpf);
+    }
 }

@@ -36,6 +36,9 @@ public abstract class Usuario implements UserDetails {
 
     @Column(nullable = false)
     private String tipo;
+
+    @Column(nullable = false, unique = true)
+    private String cpf;
     
     // Setter para o atributo 'tipo'
     public void setTipo(String tipo) {
