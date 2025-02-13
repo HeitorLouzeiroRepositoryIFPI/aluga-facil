@@ -13,7 +13,6 @@ import java.util.List;
 public interface AluguelRepository extends JpaRepository<Aluguel, Long> {
     List<Aluguel> findByCliente(Cliente cliente);
     List<Aluguel> findByImovel(Imovel imovel);
-    List<Aluguel> findByStatus(String status);
-    List<Aluguel> findByDataInicioBetween(LocalDate inicio, LocalDate fim);
-    List<Aluguel> findByClienteAndStatus(Cliente cliente, String status);
+    List<Aluguel> findByImovelAndStatus(Imovel imovel, String status);
+    List<Aluguel> findByDataInicioBetweenOrDataFimBetween(LocalDate inicioStart, LocalDate inicioEnd, LocalDate fimStart, LocalDate fimEnd);
 }
