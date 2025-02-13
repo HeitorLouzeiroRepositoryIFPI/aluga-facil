@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from "react";
 import EditarImovelForm from "./components/EditarImovelForm";
 
 interface EditarImovelPageProps {
@@ -9,6 +10,8 @@ interface EditarImovelPageProps {
 }
 
 export default function EditarImovelPage({ params }: EditarImovelPageProps) {
+  const { codigo } = use(params);
+
   return (
     <div className="container mx-auto py-6">
       <div className="mb-6">
@@ -17,7 +20,7 @@ export default function EditarImovelPage({ params }: EditarImovelPageProps) {
           Atualize as informações do imóvel
         </p>
       </div>
-      <EditarImovelForm codigo={params.codigo} />
+      <EditarImovelForm codigo={codigo} />
     </div>
   );
 }
