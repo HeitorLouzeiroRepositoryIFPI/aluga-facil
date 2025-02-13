@@ -1,5 +1,7 @@
 package com.alugafacil.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,10 +25,12 @@ public class Aluguel {
     
     @ManyToOne
     @JoinColumn(name = "cliente_id", nullable = false)
+    @JsonBackReference
     private Cliente cliente;
     
     @ManyToOne
     @JoinColumn(name = "imovel_id", nullable = false)
+    @JsonBackReference(value = "imovel-alugueis")
     private Imovel imovel;
     
     @Column(nullable = false)
@@ -39,5 +43,6 @@ public class Aluguel {
     private String status;
     
     @OneToMany(mappedBy = "aluguel", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Pagamento> pagamentos;
 }

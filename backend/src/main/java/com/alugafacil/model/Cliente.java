@@ -1,5 +1,6 @@
 package com.alugafacil.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,9 +25,11 @@ public class Cliente extends Usuario {
     private String status;
     
     @OneToMany(mappedBy = "cliente")
+    @JsonManagedReference
     private List<Aluguel> alugueis;
     
     @OneToOne(mappedBy = "cliente", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private HistoricoPagamento historicoPagamento;
     
     public Cliente() {

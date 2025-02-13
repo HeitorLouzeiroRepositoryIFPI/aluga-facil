@@ -340,9 +340,9 @@ export default function ClientesPage() {
                 <p className="text-sm text-gray-700">
                   Mostrando <span className="font-medium">{((currentPage - 1) * ITEMS_PER_PAGE) + 1}</span> até{' '}
                   <span className="font-medium">
-                    {Math.min(currentPage * ITEMS_PER_PAGE, filteredImoveis.length)}
+                    {Math.min(currentPage * ITEMS_PER_PAGE, filteredClientes.length)}
                   </span>{' '}
-                  de <span className="font-medium">{filteredImoveis.length}</span> resultados
+                  de <span className="font-medium">{filteredClientes.length}</span> resultados
                 </p>
               </div>
               <div>

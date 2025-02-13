@@ -1,6 +1,7 @@
 package com.alugafacil.controller;
 
 import com.alugafacil.dto.ClienteDTO;
+import com.alugafacil.dto.ClienteResponseDTO;
 import com.alugafacil.model.Cliente;
 import com.alugafacil.service.ClienteService;
 import jakarta.validation.Valid;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/clientes")
@@ -19,7 +21,7 @@ public class ClienteController {
     private final ClienteService clienteService;
     
     @PostMapping
-    public ResponseEntity<Cliente> cadastrar(@Valid @RequestBody ClienteDTO dto) {
+    public ResponseEntity<ClienteResponseDTO> cadastrar(@Valid @RequestBody ClienteDTO dto) {
         Cliente cliente = Cliente.builder()
             .nome(dto.getNome())
             .email(dto.getEmail())
@@ -32,33 +34,43 @@ public class ClienteController {
             .tipo("CLIENTE")
             .build();
         
+        Cliente savedCliente = clienteService.cadastrar(cliente);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(clienteService.cadastrar(cliente));
+                .body(ClienteResponseDTO.fromEntity(savedCliente));
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<Cliente> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(clienteService.buscarPorId(id));
+    public ResponseEntity<ClienteResponseDTO> buscarPorId(@PathVariable Long id) {
+        Cliente cliente = clienteService.buscarPorId(id);
+        return ResponseEntity.ok(ClienteResponseDTO.fromEntity(cliente));
     }
     
     @GetMapping
-    public ResponseEntity<List<Cliente>> listarTodos() {
-        return ResponseEntity.ok(clienteService.listarTodos());
+    public ResponseEntity<List<ClienteResponseDTO>> listarTodos() {
+        List<ClienteResponseDTO> clientes = clienteService.listarTodos()
+                .stream()
+                .map(ClienteResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(clientes);
     }
     
     @PutMapping("/{id}")
-    public ResponseEntity<Cliente> atualizar(@PathVariable Long id, @Valid @RequestBody ClienteDTO dto) {
+    public ResponseEntity<ClienteResponseDTO> atualizar(@PathVariable Long id, @Valid @RequestBody ClienteDTO dto) {
         Cliente cliente = clienteService.buscarPorId(id);
+        
         cliente.setNome(dto.getNome());
         cliente.setEmail(dto.getEmail());
-        cliente.setSenha(dto.getSenha());
+        if (dto.getSenha() != null && !dto.getSenha().isEmpty()) {
+            cliente.setSenha(dto.getSenha());
+        }
         cliente.setCpf(dto.getCpf());
         cliente.setTelefone(dto.getTelefone());
         cliente.setEndereco(dto.getEndereco());
         cliente.setDataNascimento(dto.getDataNascimento());
         cliente.setStatus(dto.getStatus());
         
-        return ResponseEntity.ok(clienteService.atualizar(id, cliente));
+        Cliente updatedCliente = clienteService.atualizar(id, cliente);
+        return ResponseEntity.ok(ClienteResponseDTO.fromEntity(updatedCliente));
     }
     
     @DeleteMapping("/{id}")
@@ -68,9 +80,9 @@ public class ClienteController {
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<Cliente> alterarStatus(@PathVariable Long id, @RequestBody String status) {
+    public ResponseEntity<ClienteResponseDTO> alterarStatus(@PathVariable Long id, @RequestBody String status) {
         Cliente cliente = clienteService.buscarPorId(id);
         cliente.setStatus(status);
-        return ResponseEntity.ok(clienteService.atualizar(id, cliente));
+        return ResponseEntity.ok(ClienteResponseDTO.fromEntity(clienteService.atualizar(id, cliente)));
     }
 }

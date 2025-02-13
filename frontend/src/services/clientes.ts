@@ -8,12 +8,13 @@ export interface ClienteDTO {
   id?: number;
   nome: string;
   email: string;
-  senha: string;
+  senha?: string;
   cpf: string;
   telefone: string;
   endereco: string;
   dataNascimento: string;
   status: 'ATIVO' | 'INATIVO' | 'BLOQUEADO';
+  tipo?: string;
 }
 
 export class ClientesService {
