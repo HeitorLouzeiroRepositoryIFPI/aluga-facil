@@ -49,12 +49,12 @@ export class ClientesService {
     return response.data;
   }
 
-  static async excluir(id: number): Promise<void> {
-    await api.delete(`/clientes/${id}`);
-  }
-
   static async alterarStatus(id: number, status: string): Promise<ClienteDTO> {
     const response = await api.patch(`/clientes/${id}/status`, { status });
     return response.data;
+  }
+
+  static async excluir(id: number): Promise<void> {
+    await api.delete(`/clientes/${id}`);
   }
 }

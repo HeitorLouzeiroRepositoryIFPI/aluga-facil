@@ -29,6 +29,17 @@ export default function ClientesPage() {
 
   const ITEMS_PER_PAGE = 10;
 
+  const handleAlterarStatus = async (cliente: ClienteDTO, novoStatus: string) => {
+    try {
+      await ClientesService.alterarStatus(cliente.id!, novoStatus);
+      toast.success('Status alterado com sucesso!');
+      carregarClientes();
+    } catch (error) {
+      console.error('Erro ao alterar status:', error);
+      toast.error('Erro ao alterar status do cliente');
+    }
+  };
+
   const handleDelete = (id: number) => {
     const cliente = clientes.find(c => c.id === id);
     if (cliente) {
@@ -52,8 +63,6 @@ export default function ClientesPage() {
       setClienteSelecionado(null);
     }
   };
-
-
 
   useEffect(() => {
     carregarClientes();

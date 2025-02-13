@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -33,7 +34,7 @@ public class ClienteController {
             .status(dto.getStatus())
             .tipo("CLIENTE")
             .build();
-        
+            
         Cliente savedCliente = clienteService.cadastrar(cliente);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ClienteResponseDTO.fromEntity(savedCliente));
@@ -80,9 +81,15 @@ public class ClienteController {
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<ClienteResponseDTO> alterarStatus(@PathVariable Long id, @RequestBody String status) {
+    public ResponseEntity<ClienteResponseDTO> alterarStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        String status = body.get("status");
+        if (status == null || status.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        
         Cliente cliente = clienteService.buscarPorId(id);
         cliente.setStatus(status);
-        return ResponseEntity.ok(ClienteResponseDTO.fromEntity(clienteService.atualizar(id, cliente)));
+        Cliente updatedCliente = clienteService.atualizar(id, cliente);
+        return ResponseEntity.ok(ClienteResponseDTO.fromEntity(updatedCliente));
     }
 }
