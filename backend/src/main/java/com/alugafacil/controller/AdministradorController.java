@@ -1,6 +1,6 @@
 package com.alugafacil.controller;
 
-import com.alugafacil.dto.UsuarioDTO;
+import com.alugafacil.dto.AdministradorDTO;
 import com.alugafacil.model.Administrador;
 import com.alugafacil.service.AdministradorService;
 import jakarta.validation.Valid;
@@ -19,13 +19,15 @@ public class AdministradorController {
     private final AdministradorService administradorService;
     
     @PostMapping
-    public ResponseEntity<Administrador> cadastrar(@Valid @RequestBody UsuarioDTO dto) {
+    public ResponseEntity<Administrador> cadastrar(@Valid @RequestBody AdministradorDTO dto) {
         Administrador administrador = Administrador.builder()
-        .nome(dto.getNome())
-        .email(dto.getEmail())
-        .senha(dto.getSenha())
-        .tipo("ADMIN")
-        .build();
+            .nome(dto.getNome())
+            .email(dto.getEmail())
+            .senha(dto.getSenha())
+            .cpf(dto.getCpf())
+            .dataNascimento(dto.getDataNascimento())
+            .tipo("ADMIN")
+            .build();
         
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(administradorService.cadastrar(administrador));
@@ -42,11 +44,13 @@ public class AdministradorController {
     }
     
     @PutMapping("/{id}")
-    public ResponseEntity<Administrador> atualizar(@PathVariable Long id, @Valid @RequestBody UsuarioDTO dto) {
-        Administrador administrador = new Administrador();
+    public ResponseEntity<Administrador> atualizar(@PathVariable Long id, @Valid @RequestBody AdministradorDTO dto) {
+        Administrador administrador = administradorService.buscarPorId(id);
         administrador.setNome(dto.getNome());
         administrador.setEmail(dto.getEmail());
         administrador.setSenha(dto.getSenha());
+        administrador.setCpf(dto.getCpf());
+        administrador.setDataNascimento(dto.getDataNascimento());
         
         return ResponseEntity.ok(administradorService.atualizar(id, administrador));
     }

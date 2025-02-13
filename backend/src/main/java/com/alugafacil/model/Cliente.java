@@ -15,16 +15,10 @@ import java.util.List;
 public class Cliente extends Usuario {
     
     @Column(nullable = false)
-    private String cpf;
-    
-    @Column(nullable = false)
     private String telefone;
     
     @Column(nullable = false)
     private String endereco;
-    
-    @Column(nullable = false)
-    private String dataNascimento;
     
     @Column(nullable = false)
     private String status;

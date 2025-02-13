@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
@@ -40,6 +41,9 @@ public abstract class Usuario implements UserDetails {
     @Column(nullable = false, unique = true)
     private String cpf;
     
+    @Column(name = "data_nascimento", nullable = false)
+    private LocalDate dataNascimento;
+
     // Setter para o atributo 'tipo'
     public void setTipo(String tipo) {
         this.tipo = tipo;

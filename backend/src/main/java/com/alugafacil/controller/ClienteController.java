@@ -48,7 +48,7 @@ public class ClienteController {
     
     @PutMapping("/{id}")
     public ResponseEntity<Cliente> atualizar(@PathVariable Long id, @Valid @RequestBody ClienteDTO dto) {
-        Cliente cliente = new Cliente();
+        Cliente cliente = clienteService.buscarPorId(id);
         cliente.setNome(dto.getNome());
         cliente.setEmail(dto.getEmail());
         cliente.setSenha(dto.getSenha());
