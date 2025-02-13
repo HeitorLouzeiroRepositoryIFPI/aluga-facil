@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,11 +31,11 @@ public class ClienteController {
             .cpf(dto.getCpf())
             .telefone(dto.getTelefone())
             .endereco(dto.getEndereco())
-            .dataNascimento(dto.getDataNascimento())
+            .dataNascimento(LocalDate.parse(dto.getDataNascimento()))
             .status(dto.getStatus())
             .tipo("CLIENTE")
             .build();
-            
+        
         Cliente savedCliente = clienteService.cadastrar(cliente);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ClienteResponseDTO.fromEntity(savedCliente));
@@ -61,14 +62,17 @@ public class ClienteController {
         
         cliente.setNome(dto.getNome());
         cliente.setEmail(dto.getEmail());
-        if (dto.getSenha() != null && !dto.getSenha().isEmpty()) {
-            cliente.setSenha(dto.getSenha());
-        }
         cliente.setCpf(dto.getCpf());
         cliente.setTelefone(dto.getTelefone());
         cliente.setEndereco(dto.getEndereco());
-        cliente.setDataNascimento(dto.getDataNascimento());
+        cliente.setDataNascimento(LocalDate.parse(dto.getDataNascimento()));
         cliente.setStatus(dto.getStatus());
+        cliente.setTipo(dto.getTipo() != null ? dto.getTipo() : cliente.getTipo());
+        
+        // Only update password if it's provided
+        if (dto.getSenha() != null && !dto.getSenha().isEmpty()) {
+            cliente.setSenha(dto.getSenha());
+        }
         
         Cliente updatedCliente = clienteService.atualizar(id, cliente);
         return ResponseEntity.ok(ClienteResponseDTO.fromEntity(updatedCliente));

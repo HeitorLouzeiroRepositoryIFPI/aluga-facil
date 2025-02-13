@@ -29,11 +29,11 @@ import { useAuth } from "@/contexts/AuthContext";
 const formSchema = z.object({
   nome: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
   email: z.string().email("Email inválido"),
-  cpf: z.string().regex(/^\\d{11}$/, "CPF deve conter 11 dígitos"),
-  telefone: z.string().regex(/^\\d{10,11}$/, "Telefone deve conter 10 ou 11 dígitos"),
+  cpf: z.string().min(11, "CPF deve conter 11 dígitos").max(11, "CPF deve conter 11 dígitos"),
+  telefone: z.string().min(10, "Telefone deve conter no mínimo 10 dígitos").max(11, "Telefone deve conter no máximo 11 dígitos"),
   endereco: z.string().min(5, "O endereço deve ter pelo menos 5 caracteres"),
-  dataNascimento: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, "Data deve estar no formato YYYY-MM-DD"),
-  status: z.enum(["ATIVO", "INATIVO", "BLOQUEADO"]),
+  dataNascimento: z.string(),
+  status: z.enum(["ATIVO", "INATIVO", "BLOQUEADO"]).default("ATIVO"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -71,17 +71,22 @@ export default function EditarClienteForm({ id }: EditarClienteFormProps) {
       try {
         const data = await ClientesService.buscarPorId(id);
         setCliente(data);
+
+        // Converte a data de YYYY-MM-DD para DD/MM/YYYY
+        const [year, month, day] = data.dataNascimento.split("-");
+        const formattedDate = `${day}/${month}/${year}`;
+
         form.reset({
           nome: data.nome,
           email: data.email,
           cpf: data.cpf,
           telefone: data.telefone,
           endereco: data.endereco,
-          dataNascimento: data.dataNascimento,
+          dataNascimento: formattedDate,
           status: data.status,
         });
       } catch (error) {
-        console.error(error);
+        console.error('Erro ao carregar cliente:', error);
         toast.error("Erro ao carregar cliente");
         router.push("/admin/dashboard/clientes");
       }
@@ -95,19 +100,32 @@ export default function EditarClienteForm({ id }: EditarClienteFormProps) {
 
     setLoading(true);
     try {
+      // Converte a data de DD/MM/YYYY para YYYY-MM-DD
+      const [day, month, year] = data.dataNascimento.split("/");
+      const formattedDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+
+      // Remove caracteres não numéricos do CPF e telefone
+      const cpfLimpo = data.cpf.replace(/\D/g, "");
+      const telefoneLimpo = data.telefone.replace(/\D/g, "");
+
       const clienteData: ClienteDTO = {
         ...cliente,
-        ...data,
-        cpf: data.cpf.replace(/\\D/g, ""),
-        telefone: data.telefone.replace(/\\D/g, ""),
+        nome: data.nome,
+        email: data.email,
+        cpf: cpfLimpo,
+        telefone: telefoneLimpo,
+        endereco: data.endereco,
+        dataNascimento: formattedDate,
+        status: data.status,
       };
 
       await ClientesService.atualizar(id, clienteData);
       toast.success("Cliente atualizado com sucesso!");
       router.push("/admin/dashboard/clientes");
-    } catch (error) {
-      console.error(error);
-      toast.error("Erro ao atualizar cliente");
+    } catch (error: any) {
+      console.error('Erro completo:', error);
+      console.error('Resposta da API:', error.response?.data);
+      toast.error(error.response?.data?.message || "Erro ao atualizar cliente");
     } finally {
       setLoading(false);
     }
@@ -158,7 +176,7 @@ export default function EditarClienteForm({ id }: EditarClienteFormProps) {
                     placeholder="Digite o CPF"
                     {...field}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\\D/g, "");
+                      const value = e.target.value.replace(/\D/g, "");
                       if (value.length <= 11) {
                         field.onChange(value);
                       }
@@ -181,7 +199,7 @@ export default function EditarClienteForm({ id }: EditarClienteFormProps) {
                     placeholder="Digite o telefone"
                     {...field}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\\D/g, "");
+                      const value = e.target.value.replace(/\D/g, "");
                       if (value.length <= 11) {
                         field.onChange(value);
                       }
@@ -200,7 +218,35 @@ export default function EditarClienteForm({ id }: EditarClienteFormProps) {
               <FormItem>
                 <FormLabel>Data de Nascimento</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input 
+                    placeholder="DD/MM/AAAA"
+                    {...field}
+                    value={field.value}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/\D/g, "");
+                      
+                      // Limita a 8 dígitos (DDMMAAAA)
+                      if (value.length > 8) {
+                        value = value.slice(0, 8);
+                      }
+                      
+                      // Formata a data (DD/MM/AAAA)
+                      let formattedDate = value;
+                      
+                      // Adiciona as barras conforme digita
+                      if (value.length >= 2) {
+                        formattedDate = value.slice(0, 2);
+                        if (value.length > 2) {
+                          formattedDate += "/" + value.slice(2, 4);
+                          if (value.length > 4) {
+                            formattedDate += "/" + value.slice(4, 8);
+                          }
+                        }
+                      }
+                      
+                      field.onChange(formattedDate);
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-
 @Data
 @Builder
 @NoArgsConstructor
@@ -19,7 +17,7 @@ public class ClienteResponseDTO {
     private String cpf;
     private String telefone;
     private String endereco;
-    private LocalDate dataNascimento;
+    private String dataNascimento;
     private String status;
     private String tipo;
 
@@ -31,7 +29,7 @@ public class ClienteResponseDTO {
                 .cpf(cliente.getCpf())
                 .telefone(cliente.getTelefone())
                 .endereco(cliente.getEndereco())
-                .dataNascimento(cliente.getDataNascimento())
+                .dataNascimento(cliente.getDataNascimento().toString())
                 .status(cliente.getStatus())
                 .tipo(cliente.getTipo())
                 .build();
