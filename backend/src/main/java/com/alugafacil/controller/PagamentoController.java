@@ -21,12 +21,14 @@ public class PagamentoController {
     private final PagamentoService pagamentoService;
     
     @PostMapping
-    public ResponseEntity<Pagamento> registrar(@Valid @RequestBody PagamentoDTO dto) {
+    public ResponseEntity<Pagamento> criar(@Valid @RequestBody PagamentoDTO dto) {
         Pagamento pagamento = new Pagamento();
         pagamento.setValor(dto.getValor());
+        pagamento.setDataPagamento(dto.getDataPagamento());
+        pagamento.setStatus(dto.getStatus());
         
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(pagamentoService.registrar(pagamento, dto.getAluguelId()));
+                .body(pagamentoService.criar(pagamento));
     }
     
     @GetMapping("/{id}")
@@ -51,9 +53,12 @@ public class PagamentoController {
         return ResponseEntity.ok(pagamentoService.listarPorPeriodo(inicio, fim));
     }
     
-    @PatchMapping("/{id}/confirmar")
-    public ResponseEntity<Void> confirmarPagamento(@PathVariable Long id) {
-        pagamentoService.confirmarPagamento(id);
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Void> atualizarStatus(
+            @PathVariable Long id,
+            @RequestParam String status,
+            @RequestParam(required = false) String formaPagamento) {
+        pagamentoService.atualizarStatus(id, status, formaPagamento);
         return ResponseEntity.noContent().build();
     }
     

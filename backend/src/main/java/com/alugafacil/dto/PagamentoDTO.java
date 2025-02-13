@@ -14,7 +14,14 @@ public class PagamentoDTO {
     @Positive(message = "Valor deve ser positivo")
     private Double valor;
     
+    @NotNull(message = "Data de pagamento é obrigatória")
     private LocalDate dataPagamento;
+    
+    @NotNull(message = "Status é obrigatório")
     private String status;
+    
+    @NotNull(message = "Aluguel é obrigatório")
     private Long aluguelId;
+    
+    private String formaPagamento;
 }

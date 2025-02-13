@@ -22,9 +22,15 @@ public class AluguelController {
     
     @PostMapping
     public ResponseEntity<Aluguel> criar(@Valid @RequestBody AluguelDTO dto) {
-        Aluguel aluguel = new Aluguel();
-        aluguel.setDataInicio(dto.getDataInicio());
-        aluguel.setDataFim(dto.getDataFim());
+        Aluguel aluguel = Aluguel.builder()
+            .dataInicio(dto.getDataInicio())
+            .dataFim(dto.getDataFim())
+            .valorMensal(dto.getValorMensal())
+            .taxaAdministracao(dto.getTaxaAdministracao())
+            .valorDeposito(dto.getValorDeposito())
+            .diaPagamento(dto.getDiaPagamento())
+            .observacoes(dto.getObservacoes())
+            .build();
         
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(aluguelService.criar(aluguel, dto.getClienteId(), dto.getImovelId()));
