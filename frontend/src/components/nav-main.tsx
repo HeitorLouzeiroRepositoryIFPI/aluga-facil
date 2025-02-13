@@ -36,10 +36,10 @@ const adminItems: NavItem[] = [
     icon: ChevronRight,
     isActive: true,
     children: [
-      { title: "Imóveis", href: "dashboard/imoveis" },
-      { title: "Clientes", href: "dashboard/clientes" },
-      { title: "Contratos", href: "dashboard/contratos" },
-      { title: "Pagamentos", href: "dashboard/pagamentos" },
+      { title: "Imóveis", href: "/admin/dashboard/imoveis" },
+      { title: "Clientes", href: "/admin/dashboard/clientes" },
+      { title: "Contratos", href: "/admin/dashboard/contratos" },
+      { title: "Pagamentos", href: "/admin/dashboard/pagamentos" },
     ],
   },
 ];
@@ -52,7 +52,6 @@ const clientItems: NavItem[] = [
     children: [
       { title: "Meus Aluguéis", href: "/dashboard/meus-alugueis" },
       { title: "Pagamentos", href: "/dashboard/meus-pagamentos" },
-
     ],
   },
 ];
@@ -106,7 +105,7 @@ const NavMain = () => {
         ))}
       </SidebarMenu>
     </SidebarGroup>
-  )
-}
+  );
+};
 
 export default NavMain;
