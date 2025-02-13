@@ -44,14 +44,9 @@ public abstract class Usuario implements UserDetails {
     @Column(name = "data_nascimento", nullable = false)
     private LocalDate dataNascimento;
 
-    // Setter para o atributo 'tipo'
-    public void setTipo(String tipo) {
-        this.tipo = tipo;
-    }
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + tipo));
     }
 
     @Override

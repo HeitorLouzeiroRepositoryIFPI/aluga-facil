@@ -1,30 +1,32 @@
 package com.alugafacil.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import jakarta.annotation.PostConstruct; 
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
 @SuperBuilder
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "administradores")
-@EqualsAndHashCode(callSuper = true)
 @PrimaryKeyJoinColumn(name = "usuario_id")
+@EqualsAndHashCode(callSuper = true)
 public class Administrador extends Usuario {
     
-    @OneToMany(mappedBy = "administrador", cascade = CascadeType.ALL)
-    @JsonManagedReference
-    private List<Imovel> imoveis;
-
-    @PostConstruct
-    public void init() {
-        setTipo("ADMIN");
+    @OneToMany(mappedBy = "administrador")
+    @JsonIgnoreProperties({"administrador", "alugueis"})
+    private List<Imovel> imoveis = new ArrayList<>();
+    
+    @PrePersist
+    public void prePersist() {
+        this.setTipo("ADMIN");
     }
 }

@@ -1,18 +1,24 @@
 package com.alugafacil.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
 @SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "clientes")
-@EqualsAndHashCode(callSuper = true)
 @PrimaryKeyJoinColumn(name = "usuario_id")
+@EqualsAndHashCode(callSuper = true)
 public class Cliente extends Usuario {
     
     @Column(nullable = false)
@@ -25,16 +31,14 @@ public class Cliente extends Usuario {
     private String status;
     
     @OneToMany(mappedBy = "cliente")
-    @JsonManagedReference
-    private List<Aluguel> alugueis;
+    @JsonIgnoreProperties({"cliente", "pagamentos"})
+    private List<Aluguel> alugueis = new ArrayList<>();
     
-    @OneToOne(mappedBy = "cliente", cascade = CascadeType.ALL)
-    @JsonManagedReference
-    private HistoricoPagamento historicoPagamento;
-    
-    public Cliente() {
-        super();
-        setTipo("CLIENTE");
-        this.status = "ATIVO";
+    @PrePersist
+    public void prePersist() {
+        this.setTipo("CLIENTE");
+        if (this.status == null) {
+            this.status = "ATIVO";
+        }
     }
 }

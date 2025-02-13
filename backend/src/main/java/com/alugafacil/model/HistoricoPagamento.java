@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -22,10 +23,14 @@ public class HistoricoPagamento {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @OneToOne
-    @JoinColumn(name = "cliente_id", nullable = false)
-    @JsonBackReference
-    private Cliente cliente;
+    @Column(nullable = false)
+    private LocalDate dataPagamento;
+    
+    @Column(nullable = false)
+    private Double valor;
+    
+    @Column(nullable = false)
+    private String formaPagamento;
     
     @OneToMany(mappedBy = "historicoPagamento", cascade = CascadeType.ALL)
     @JsonManagedReference
