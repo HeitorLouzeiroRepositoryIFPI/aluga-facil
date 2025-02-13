@@ -9,7 +9,7 @@ import { Imovel } from "./imoveis";
 export interface ContratoDTO {
   id?: number;
   clienteId: number;
-  imovelCodigo: string;
+  imovelId: number;
   dataInicio: string;
   dataFim: string;
   valorMensal: number;
@@ -24,38 +24,64 @@ export interface ContratoDTO {
 
 export class ContratosService {
   static async listar(): Promise<ContratoDTO[]> {
-    const response = await api.get('/contratos');
+    const response = await api.get('/alugueis');
     return response.data;
   }
 
   static async buscarPorId(id: number): Promise<ContratoDTO> {
-    const response = await api.get(`/contratos/${id}`);
+    const response = await api.get(`/alugueis/${id}`);
     return response.data;
   }
 
   static async criar(contrato: ContratoDTO): Promise<ContratoDTO> {
-    const response = await api.post('/contratos', contrato);
-    return response.data;
+    try {
+      console.log('Enviando contrato:', contrato);
+      const response = await api.post('/alugueis', contrato);
+      console.log('Resposta:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Erro ao criar contrato:', error.response?.data || error);
+      throw error;
+    }
   }
 
   static async atualizar(id: number, contrato: Partial<ContratoDTO>): Promise<ContratoDTO> {
-    const response = await api.put(`/contratos/${id}`, contrato);
+    const response = await api.put(`/alugueis/${id}`, contrato);
     return response.data;
   }
 
   static async excluir(id: number): Promise<void> {
-    await api.delete(`/contratos/${id}`);
+    try {
+      console.log('Excluindo contrato:', id);
+      await api.delete(`/alugueis/${id}`);
+      console.log('Contrato excluído com sucesso');
+    } catch (error: any) {
+      console.error('Erro ao excluir contrato:', error.response?.data || error);
+      throw new Error(error.response?.data?.message || 'Erro ao excluir contrato');
+    }
   }
 
   static async alterarStatus(id: number, novoStatus: string): Promise<ContratoDTO> {
-    const response = await api.patch(`/contratos/${id}/status`, { status: novoStatus });
-    return response.data;
+    try {
+      const response = await api.patch(`/alugueis/${id}/status?status=${novoStatus}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Erro ao alterar status:', error.response?.data || error);
+      throw new Error(error.response?.data?.message || 'Erro ao alterar status do contrato');
+    }
   }
 
-  static async verificarDisponibilidade(imovelCodigo: string, dataInicio: string, dataFim: string): Promise<boolean> {
-    const response = await api.get(`/contratos/verificar-disponibilidade`, {
-      params: { imovelCodigo, dataInicio, dataFim }
-    });
-    return response.data.disponivel;
+  static async verificarDisponibilidade(imovelId: number, dataInicio: string, dataFim: string): Promise<boolean> {
+    try {
+      console.log('Verificando disponibilidade:', { imovelId, dataInicio, dataFim });
+      const response = await api.get(`/alugueis/verificar-disponibilidade`, {
+        params: { imovelId, dataInicio, dataFim }
+      });
+      console.log('Resposta:', response.data);
+      return response.data.disponivel;
+    } catch (error: any) {
+      console.error('Erro ao verificar disponibilidade:', error.response?.data || error);
+      throw new Error(`Erro ao verificar disponibilidade: ${error.message}`);
+    }
   }
 }

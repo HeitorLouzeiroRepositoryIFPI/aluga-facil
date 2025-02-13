@@ -8,43 +8,37 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-interface StatusBadgeProps {
-  status: string;
-  onStatusChange?: (newStatus: string) => void;
+export type StatusType = string;
+
+export type StatusColor = 'success' | 'danger' | 'warning' | 'info' | 'default';
+
+export interface StatusConfig {
+  label: string;
+  color: StatusColor;
+}
+
+export interface StatusBadgeProps {
+  status: StatusType;
+  statusMap: Record<string, StatusConfig>;
+  onStatusChange?: (newStatus: StatusType) => void;
 }
 
 const STATUS_COLORS = {
-  ATIVO: "bg-green-100 text-green-800 hover:bg-green-200",
-  INATIVO: "bg-gray-100 text-gray-800 hover:bg-gray-200",
-  BLOQUEADO: "bg-red-100 text-red-800 hover:bg-red-200",
-  DISPONIVEL: "bg-blue-100 text-blue-800 hover:bg-blue-200",
-  ALUGADO: "bg-purple-100 text-purple-800 hover:bg-purple-200",
-  MANUTENCAO: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
-  RESERVADO: "bg-orange-100 text-orange-800 hover:bg-orange-200"
+  success: "bg-green-100 text-green-800 hover:bg-green-200",
+  danger: "bg-red-100 text-red-800 hover:bg-red-200",
+  warning: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+  info: "bg-blue-100 text-blue-800 hover:bg-blue-200",
+  default: "bg-gray-100 text-gray-800 hover:bg-gray-200"
 };
 
-const CLIENTE_STATUS_OPTIONS = [
-  { label: "Ativo", value: "ATIVO" },
-  { label: "Inativo", value: "INATIVO" },
-  { label: "Bloqueado", value: "BLOQUEADO" }
-];
-
-const IMOVEL_STATUS_OPTIONS = [
-  { label: "Disponível", value: "DISPONIVEL" },
-  { label: "Alugado", value: "ALUGADO" },
-  { label: "Manutenção", value: "MANUTENCAO" },
-  { label: "Reservado", value: "RESERVADO" }
-];
-
-export function StatusBadge({ status, onStatusChange }: StatusBadgeProps) {
-  const isClienteStatus = CLIENTE_STATUS_OPTIONS.some(opt => opt.value === status);
-  const statusOptions = isClienteStatus ? CLIENTE_STATUS_OPTIONS : IMOVEL_STATUS_OPTIONS;
-  const statusColor = STATUS_COLORS[status] || "bg-gray-100 text-gray-800";
+export function StatusBadge({ status, statusMap, onStatusChange }: StatusBadgeProps) {
+  const statusConfig = statusMap[status] || { label: status, color: 'default' };
+  const statusColor = STATUS_COLORS[statusConfig.color] || STATUS_COLORS.default;
 
   if (!onStatusChange) {
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}`}>
-        {status}
+        {statusConfig.label}
       </span>
     );
   }
@@ -52,16 +46,16 @@ export function StatusBadge({ status, onStatusChange }: StatusBadgeProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer ${statusColor}`}>
-        {status}
+        {statusConfig.label}
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        {statusOptions.map((option) => (
+        {Object.entries(statusMap).map(([statusKey, config]) => (
           <DropdownMenuItem
-            key={option.value}
-            onClick={() => onStatusChange(option.value)}
-            className={`cursor-pointer ${STATUS_COLORS[option.value as keyof typeof STATUS_COLORS]}`}
+            key={statusKey}
+            onClick={() => onStatusChange(statusKey)}
+            className={`cursor-pointer ${STATUS_COLORS[config.color]}`}
           >
-            {option.label}
+            {config.label}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

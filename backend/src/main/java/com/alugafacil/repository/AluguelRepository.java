@@ -14,5 +14,6 @@ public interface AluguelRepository extends JpaRepository<Aluguel, Long> {
     List<Aluguel> findByCliente(Cliente cliente);
     List<Aluguel> findByImovel(Imovel imovel);
     List<Aluguel> findByImovelAndStatus(Imovel imovel, String status);
-    List<Aluguel> findByDataInicioBetweenOrDataFimBetween(LocalDate inicioStart, LocalDate inicioEnd, LocalDate fimStart, LocalDate fimEnd);
+    List<Aluguel> findByImovelAndStatusAndDataFimGreaterThanEqual(Imovel imovel, String status, LocalDate data);
+    List<Aluguel> findByDataInicioBetweenOrDataFimBetween(LocalDate inicio1, LocalDate fim1, LocalDate inicio2, LocalDate fim2);
 }

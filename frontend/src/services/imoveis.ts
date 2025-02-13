@@ -50,35 +50,22 @@ const normalizeImovel = (data: any): Imovel => {
     return getDefaultImovel();
   }
 
-  try {
-    // Extrai apenas os campos necessários do administrador
-    const admin = data.administrador ? {
-      id: Number(data.administrador.id),
-      nome: String(data.administrador.nome)
-    } : { id: 0, nome: 'Não informado' };
+  // Garante que todas as propriedades obrigatórias existam
+  const imovel: Imovel = {
+    id: data.id || 0,
+    codigo: data.codigo || '',
+    nome: data.nome || '',
+    endereco: data.endereco || '',
+    descricao: data.descricao || '',
+    valorMensal: data.valorMensal || 0,
+    status: data.status || 'DISPONIVEL',
+    tipo: data.tipo || '',
+    fotos: ensureArray(data.fotos),
+    administrador: data.administrador || { id: 0, nome: '' }
+  };
 
-    // Cria o objeto normalizado
-    const normalizedImovel: Imovel = {
-      id: Number(data.id),
-      codigo: String(data.codigo),
-      nome: String(data.nome),
-      endereco: String(data.endereco),
-      descricao: String(data.descricao),
-      valorMensal: Number(data.valorMensal),
-      status: String(data.status).toUpperCase(),
-      tipo: String(data.tipo),
-      fotos: Array.isArray(data.fotos) ? data.fotos : [],
-      administrador: admin
-    };
-
-    // Log do objeto normalizado para debug
-    console.log('Imóvel normalizado:', normalizedImovel);
-    return normalizedImovel;
-
-  } catch (error) {
-    console.error('Erro ao normalizar imóvel:', error);
-    return getDefaultImovel();
-  }
+  console.log('Imóvel normalizado:', imovel);
+  return imovel;
 };
 
 const getDefaultImovel = (): Imovel => ({
@@ -173,19 +160,14 @@ export const ImoveisService = {
     }
   },
 
-  listarPorStatus: async (status: string) => {
+  async listarPorStatus(status: string) {
     try {
-      const response = await api.get<any[]>(`/imoveis/status/${status}`);
-      console.log('Response from listarPorStatus:', response.data);
-      
-      if (!response.data || !Array.isArray(response.data)) {
-        console.error('Resposta da API inválida:', response.data);
-        return [];
-      }
-
-      // Normaliza cada imóvel do array
-      const imoveis = response.data.map(normalizeImovel);
-      console.log('Normalized imoveis:', imoveis);
+      console.log('Buscando imóveis com status:', status);
+      const response = await api.get(`/imoveis/status/${status}`);
+      console.log('Resposta da API:', response.data);
+      const data = await response.data;
+      const imoveis = ensureArray(data).map(normalizeImovel);
+      console.log('Imóveis normalizados:', imoveis);
       return imoveis;
     } catch (error) {
       console.error('Erro ao listar imóveis por status:', error);
@@ -296,5 +278,16 @@ export const ImoveisService = {
   excluir: async (codigo: string) => {
     console.log('Excluindo imóvel com código', codigo);
     await api.delete(`/imoveis/${codigo}`);
-  }
+  },
+
+  async listarDisponiveis(): Promise<Imovel[]> {
+    try {
+      const response = await api.get('/imoveis/status/DISPONIVEL');
+      const data = await response.data;
+      return ensureArray(data).map(normalizeImovel);
+    } catch (error) {
+      console.error('Erro ao listar imóveis disponíveis:', error);
+      return [];
+    }
+  },
 };

@@ -11,7 +11,6 @@ import { ContratosService, ContratoDTO } from "@/services/contratos";
 import { ProtectedRoute } from "@/components/protected-route";
 import DashboardLayout from "@/app/dashboard/DashboardLayout";
 import { useDataTableState } from "@/hooks/useDataTableState";
-import { DeleteModal } from "@/components/delete-modal/DeleteModal";
 import { calculateContratoStats } from "@/utils/stats";
 import { DataTable } from "@/components/data-table/DataTable";
 import { StatusBadge } from "@/components/status-badge/StatusBadge";
@@ -22,8 +21,6 @@ import { Button } from "@/components/ui/button";
 
 export default function ContratosPage() {
   const router = useRouter();
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [contratoToDelete, setContratoToDelete] = useState<number | null>(null);
   const [stats, setStats] = useState({
     total: 0,
     ativos: 0,
@@ -51,9 +48,7 @@ export default function ContratosPage() {
         const searchLower = search.toLowerCase();
         const matchesSearch = search === "" ||
           contrato.cliente?.nome.toLowerCase().includes(searchLower) ||
-          contrato.cliente?.cpf.toLowerCase().includes(searchLower) ||
-          contrato.imovel?.nome.toLowerCase().includes(searchLower) ||
-          contrato.imovel?.codigo.toLowerCase().includes(searchLower);
+          contrato.imovel?.nome.toLowerCase().includes(searchLower);
         
         const matchesStatus = status === "TODOS" || contrato.status === status;
         
@@ -71,31 +66,11 @@ export default function ContratosPage() {
   const handleStatusChange = async (id: number, novoStatus: string) => {
     try {
       await ContratosService.alterarStatus(id, novoStatus);
+      toast.success('Status alterado com sucesso!');
       refresh();
     } catch (error) {
       console.error('Erro ao alterar status:', error);
       toast.error('Erro ao alterar status do contrato');
-    }
-  };
-
-  const handleDelete = (id: number) => {
-    setContratoToDelete(id);
-    setDeleteModalOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!contratoToDelete) return;
-
-    try {
-      await ContratosService.excluir(contratoToDelete);
-      toast.success('Contrato excluído com sucesso!');
-      refresh();
-    } catch (error) {
-      console.error('Erro ao excluir contrato:', error);
-      toast.error('Erro ao excluir contrato');
-    } finally {
-      setDeleteModalOpen(false);
-      setContratoToDelete(null);
     }
   };
 
@@ -124,7 +99,7 @@ export default function ContratosPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <StatsCard
               title="Total de Contratos"
               value={stats.total.toString()}
@@ -133,20 +108,26 @@ export default function ContratosPage() {
             <StatsCard
               title="Contratos Ativos"
               value={stats.ativos.toString()}
-              description={`Valor mensal: ${formatarValor(stats.valorTotalMensal)}`}
+              description="Em andamento"
               color="green"
             />
             <StatsCard
               title="Contratos Finalizados"
               value={stats.finalizados.toString()}
-              description="Contratos encerrados"
-              color="yellow"
+              description="Concluídos"
+              color="blue"
             />
             <StatsCard
               title="Contratos Cancelados"
               value={stats.cancelados.toString()}
-              description="Contratos cancelados"
+              description="Interrompidos"
               color="red"
+            />
+            <StatsCard
+              title="Valor Total Mensal"
+              value={formatarValor(stats.valorTotalMensal)}
+              description="Receita mensal"
+              color="yellow"
             />
           </div>
 
@@ -155,38 +136,59 @@ export default function ContratosPage() {
             onSearchChange={setSearchTerm}
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
+            statusOptions={[
+              { value: 'TODOS', label: 'Todos' },
+              { value: 'ATIVO', label: 'Ativo' },
+              { value: 'FINALIZADO', label: 'Finalizado' },
+              { value: 'CANCELADO', label: 'Cancelado' },
+              { value: 'RENOVADO', label: 'Renovado' }
+            ]}
           />
 
           <DataTable
             data={filteredContratos}
             columns={[
               {
-                header: "Cliente/Imóvel",
+                header: "Cliente",
                 accessor: (row) => (
-                  <div>
-                    <div className="text-sm font-medium">{row.cliente?.nome}</div>
-                    <div className="text-xs text-gray-500">{row.imovel?.nome}</div>
-                  </div>
+                  <div className="font-medium">{row.cliente?.nome}</div>
                 )
               },
               {
-                header: "Período",
+                header: "Imóvel",
                 accessor: (row) => (
-                  <div className="text-sm">
-                    <div>Início: {format(new Date(row.dataInicio), 'dd/MM/yyyy', { locale: ptBR })}</div>
-                    <div>Fim: {format(new Date(row.dataFim), 'dd/MM/yyyy', { locale: ptBR })}</div>
-                  </div>
+                  <div className="font-medium">{row.imovel?.nome}</div>
+                )
+              },
+              {
+                header: "Data Início",
+                accessor: (row) => (
+                  <div>{format(new Date(row.dataInicio), 'dd/MM/yyyy', { locale: ptBR })}</div>
+                )
+              },
+              {
+                header: "Data Fim",
+                accessor: (row) => (
+                  <div>{format(new Date(row.dataFim), 'dd/MM/yyyy', { locale: ptBR })}</div>
                 )
               },
               {
                 header: "Valor Mensal",
-                accessor: (row) => formatarValor(row.valorMensal)
+                accessor: (row) => (
+                  <div className="font-medium">{formatarValor(row.valorMensal)}</div>
+                )
               },
               {
                 header: "Status",
                 accessor: (row) => (
                   <StatusBadge
                     status={row.status}
+                    statusMap={{
+                      'ATIVO': { label: 'Ativo', color: 'success' },
+                      'FINALIZADO': { label: 'Finalizado', color: 'default' },
+                      'CANCELADO': { label: 'Cancelado', color: 'danger' },
+                      'RENOVADO': { label: 'Renovado', color: 'info' }
+                    }}
                     onStatusChange={(newStatus) => handleStatusChange(row.id!, newStatus)}
                   />
                 )
@@ -195,8 +197,8 @@ export default function ContratosPage() {
                 header: "Ações",
                 accessor: (row) => (
                   <ActionButtons
-                    onEdit={() => router.push(`/admin/dashboard/contratos/editar/${row.id}`)}
-                    onDelete={() => handleDelete(row.id!)}
+                    onView={() => router.push(`/admin/dashboard/contratos/${row.id}`)}
+                    onEdit={() => router.push(`/admin/dashboard/contratos/${row.id}/editar`)}
                   />
                 )
               }
@@ -207,15 +209,8 @@ export default function ContratosPage() {
             loading={loading}
             error={error}
           />
-
-          <DeleteModal
-            isOpen={deleteModalOpen}
-            onClose={() => setDeleteModalOpen(false)}
-            onConfirm={confirmDelete}
-            title="Excluir Contrato"
-            message="Tem certeza que deseja excluir este contrato? Esta ação não pode ser desfeita."
-          />
         </div>
       </DashboardLayout>
     </ProtectedRoute>
   );
+}
