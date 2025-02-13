@@ -131,6 +131,17 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleStatusChange = async (codigo: string, novoStatus: string) => {
+    try {
+      await ImoveisService.atualizar(codigo, { ...imoveis.find(i => i.codigo === codigo)!, status: novoStatus });
+      toast.success('Status atualizado com sucesso!');
+      carregarImoveis();
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      toast.error('Erro ao atualizar status');
+    }
+  };
+
   // Paginação
   const totalPages = Math.ceil(filteredImoveis.length / ITEMS_PER_PAGE);
   const paginatedImoveis = filteredImoveis.slice(
@@ -203,9 +214,9 @@ export default function AdminDashboard() {
           >
             <option value="TODOS">Todos os Status</option>
             <option value="DISPONIVEL">Disponível</option>
-            <option value="RESERVADO">Reservado</option>
-            <option value="MANUTENCAO">Em Manutenção</option>
             <option value="ALUGADO">Alugado</option>
+            <option value="MANUTENCAO">Manutenção</option>
+            <option value="RESERVADO">Reservado</option>
           </select>
           <select
             value={tipoFilter}
@@ -215,9 +226,9 @@ export default function AdminDashboard() {
             <option value="TODOS">Todos os Tipos</option>
             <option value="CASA">Casa</option>
             <option value="APARTAMENTO">Apartamento</option>
+            <option value="COMERCIAL">Comercial</option>
             <option value="TERRENO">Terreno</option>
             <option value="SALA_COMERCIAL">Sala Comercial</option>
-            <option value="COMERCIAL">Comercial</option>
           </select>
         </div>
       </div>
@@ -299,10 +310,21 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-2 text-sm">
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(imovel.status)}`}>
                         {imovel.status}
                       </span>
+
+                      <select
+                        value={imovel.status}
+                        onChange={(e) => handleStatusChange(imovel.codigo, e.target.value)}
+                        className="px-2 py-1 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      >
+                        <option value="DISPONIVEL">Disponível</option>
+                        <option value="ALUGADO">Alugado</option>
+                        <option value="MANUTENCAO">Manutenção</option>
+                        <option value="RESERVADO">Reservado</option>
+                      </select>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 font-medium">
                       {formatCurrency(imovel.valorMensal)}
