@@ -3,6 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,24 +11,32 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedTypes }: ProtectedRouteProps) {
-  const { userType } = useAuth();
+  const { userType, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!userType) {
+    if (!isLoading && !userType) {
       router.push("/login");
       return;
     }
 
-    if (!allowedTypes.includes(userType)) {
+    if (!isLoading && !allowedTypes.includes(userType!)) {
       // Redireciona para a página correta baseado no tipo de usuário
       if (userType === 'admin') {
         router.push('/admin/dashboard');
-      } else {
+      } else if (userType === 'cliente') {
         router.push('/cliente/home');
       }
     }
-  }, [userType, allowedTypes, router]);
+  }, [userType, allowedTypes, router, isLoading]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!userType || !allowedTypes.includes(userType)) {
     return null;
