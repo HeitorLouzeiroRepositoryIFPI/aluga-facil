@@ -52,6 +52,11 @@ export class PagamentosService {
     return response.data;
   }
 
+  static async buscarPorContrato(contratoId: number): Promise<PagamentoDTO[]> {
+    const response = await api.get(`/pagamentos/contrato/${contratoId}`);
+    return response.data;
+  }
+
   static async criar(pagamento: PagamentoDTO): Promise<PagamentoDTO> {
     const response = await api.post('/pagamentos', pagamento);
     return response.data;

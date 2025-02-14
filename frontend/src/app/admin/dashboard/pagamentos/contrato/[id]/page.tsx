@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { format } from 'date-fns';
-import { FiArrowLeft } from 'react-icons/fi';
+import { FiArrowLeft, FiPlus } from 'react-icons/fi';
 
 import { PagamentosService, PagamentoDTO } from '@/services/pagamentos';
 import { ProtectedRoute } from '@/components/protected-route';
@@ -14,14 +14,17 @@ import { StatsCard } from '@/components/stats-card/StatsCard';
 import { Button } from '@/components/ui/button';
 import { formatarValor } from '@/utils/formatters';
 
-interface PageProps {
-  params: {
-    id: string;
-  };
-}
+const STATUS_MAP = {
+  PENDENTE: { label: 'Pendente', color: 'warning' },
+  PAGO: { label: 'Pago', color: 'success' },
+  ATRASADO: { label: 'Atrasado', color: 'danger' },
+};
 
-export default function PagamentosContratoPage({ params }: PageProps) {
+export default function PagamentosContratoPage() {
   const router = useRouter();
+  const params = useParams();
+  const contratoId = params?.id ? parseInt(params.id as string) : null;
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pagamentos, setPagamentos] = useState<PagamentoDTO[]>([]);
@@ -32,17 +35,20 @@ export default function PagamentosContratoPage({ params }: PageProps) {
   } | null>(null);
 
   useEffect(() => {
-    loadData();
-  }, [params.id]);
+    if (contratoId) {
+      loadData();
+    }
+  }, [contratoId]);
 
   const loadData = async () => {
+    if (!contratoId) return;
+
     try {
       setLoading(true);
-      const data = await PagamentosService.listar();
-      const pagamentosDoContrato = data.filter(p => p.contratoId === parseInt(params.id));
+      const data = await PagamentosService.buscarPorContrato(contratoId);
       
-      if (pagamentosDoContrato.length > 0) {
-        const primeiro = pagamentosDoContrato[0];
+      if (data.length > 0) {
+        const primeiro = data[0];
         setDetalhesContrato({
           imovelNome: primeiro.imovel?.nome,
           imovelCodigo: primeiro.imovel?.codigo,
@@ -50,10 +56,10 @@ export default function PagamentosContratoPage({ params }: PageProps) {
         });
       }
       
-      setPagamentos(pagamentosDoContrato);
+      setPagamentos(data);
     } catch (error) {
       console.error('Erro ao carregar pagamentos:', error);
-      setError('Erro ao carregar os dados');
+      setError('Erro ao carregar os dados do contrato');
     } finally {
       setLoading(false);
     }
@@ -69,6 +75,31 @@ export default function PagamentosContratoPage({ params }: PageProps) {
     atrasados: pagamentos.filter(p => p.status === 'ATRASADO').length,
     valorAtrasado: pagamentos.filter(p => p.status === 'ATRASADO').reduce((acc, p) => acc + (Number(p.valor) || 0), 0),
   };
+
+  if (loading) {
+    return (
+      <ProtectedRoute allowedTypes={['admin']}>
+        <DashboardLayout>
+          <div className="flex justify-center items-center min-h-screen">
+            <span className="text-gray-500">Carregando...</span>
+          </div>
+        </DashboardLayout>
+      </ProtectedRoute>
+    );
+  }
+
+  if (error) {
+    return (
+      <ProtectedRoute allowedTypes={['admin']}>
+        <DashboardLayout>
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-red-500">{error}</p>
+            <Button onClick={() => router.back()}>Voltar</Button>
+          </div>
+        </DashboardLayout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute allowedTypes={['admin']}>
@@ -93,29 +124,34 @@ export default function PagamentosContratoPage({ params }: PageProps) {
                 </div>
               )}
             </div>
+            <Button onClick={() => router.push(`/admin/dashboard/pagamentos/cadastrar?contratoId=${contratoId}`)}>
+              <FiPlus className="mr-2" />
+              Novo Pagamento
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <StatsCard
               title="Total"
-              value={`${stats.total} pagamentos`}
+              value={stats.total}
               description={formatarValor(stats.valorTotal)}
+              color="blue"
             />
             <StatsCard
               title="Pagos"
-              value={`${stats.pagos} pagamentos`}
+              value={stats.pagos}
               description={formatarValor(stats.valorPago)}
               color="green"
             />
             <StatsCard
               title="Pendentes"
-              value={`${stats.pendentes} pagamentos`}
+              value={stats.pendentes}
               description={formatarValor(stats.valorPendente)}
               color="yellow"
             />
             <StatsCard
               title="Atrasados"
-              value={`${stats.atrasados} pagamentos`}
+              value={stats.atrasados}
               description={formatarValor(stats.valorAtrasado)}
               color="red"
             />
@@ -134,18 +170,14 @@ export default function PagamentosContratoPage({ params }: PageProps) {
               },
               {
                 header: "Forma de Pagamento",
-                accessor: (row) => (
-                  <span className="px-2 py-1 text-xs rounded-full bg-gray-100">
-                    {row.formaPagamento}
-                  </span>
-                )
+                accessor: (row) => row.formaPagamento || '-'
               },
               {
                 header: "Status",
                 accessor: (row) => (
-                  <StatusBadge
-                    status={row.status}
-                    type="pagamento"
+                  <StatusBadge 
+                    status={row.status} 
+                    statusMap={STATUS_MAP}
                   />
                 )
               },
@@ -154,12 +186,9 @@ export default function PagamentosContratoPage({ params }: PageProps) {
                 accessor: (row) => row.observacoes || '-'
               }
             ]}
-            currentPage={1}
-            itemsPerPage={10}
-            loading={loading}
-            error={error}
           />
         </div>
       </DashboardLayout>
     </ProtectedRoute>
   );
+}
