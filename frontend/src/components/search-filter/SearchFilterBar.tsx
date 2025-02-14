@@ -2,6 +2,13 @@
 
 import React from 'react';
 import { FiSearch } from 'react-icons/fi';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface FilterOption {
   label: string;
@@ -9,18 +16,18 @@ interface FilterOption {
 }
 
 interface ExtraFilter {
-  label: string;
   value: string;
-  options: FilterOption[];
   onChange: (value: string) => void;
+  options: Array<{ value: string; label: string }>;
 }
 
 interface SearchFilterBarProps {
   searchTerm: string;
-  onSearchChange: (term: string) => void;
+  onSearchChange: (value: string) => void;
   searchPlaceholder?: string;
-  statusFilter: string;
-  onStatusFilterChange: (status: string) => void;
+  statusFilter?: string;
+  onStatusFilterChange?: (value: string) => void;
+  statusOptions?: Array<{ value: string; label: string }>;
   extraFilter?: ExtraFilter;
 }
 
@@ -30,56 +37,60 @@ export function SearchFilterBar({
   searchPlaceholder = "Buscar...",
   statusFilter,
   onStatusFilterChange,
+  statusOptions = [],
   extraFilter
 }: SearchFilterBarProps) {
-  const statusOptions = [
-    { label: "Todos", value: "TODOS" },
-    { label: "Ativo", value: "ATIVO" },
-    { label: "Inativo", value: "INATIVO" },
-    { label: "Bloqueado", value: "BLOQUEADO" },
-    { label: "Disponível", value: "DISPONIVEL" },
-    { label: "Alugado", value: "ALUGADO" }
-  ];
-
   return (
-    <div className="flex flex-col md:flex-row gap-4">
-      <div className="flex-1 relative">
-        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+    <div className="flex flex-col sm:flex-row gap-4 items-center">
+      <div className="relative flex-1">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <FiSearch className="h-5 w-5 text-gray-400" />
+        </div>
         <input
           type="text"
-          placeholder={searchPlaceholder}
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder={searchPlaceholder}
+          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
         />
       </div>
-      <div className="flex gap-4">
-        <select
-          value={statusFilter}
-          onChange={(e) => onStatusFilterChange(e.target.value)}
-          className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {statusOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
 
-        {extraFilter && (
-          <select
-            value={extraFilter.value}
-            onChange={(e) => extraFilter.onChange(e.target.value)}
-            className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {extraFilter.options.map((option) => (
-              <option key={option.value} value={option.value}>
+      {statusOptions.length > 0 && onStatusFilterChange && (
+        <Select
+          value={statusFilter}
+          onValueChange={onStatusFilterChange}
+          defaultValue={statusOptions[0].value}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Selecione o status" />
+          </SelectTrigger>
+          <SelectContent>
+            {statusOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
                 {option.label}
-              </option>
+              </SelectItem>
             ))}
-          </select>
-        )}
-      </div>
+          </SelectContent>
+        </Select>
+      )}
+
+      {extraFilter && (
+        <Select
+          value={extraFilter.value}
+          onValueChange={extraFilter.onChange}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Selecione uma opção" />
+          </SelectTrigger>
+          <SelectContent>
+            {extraFilter.options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
     </div>
   );
 }

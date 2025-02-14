@@ -161,6 +161,11 @@ export default function ClientesPage() {
                 accessor: (row) => (
                   <StatusBadge
                     status={row.status}
+                    statusMap={{
+                      'ATIVO': { label: 'Ativo', color: 'success' },
+                      'INATIVO': { label: 'Inativo', color: 'default' },
+                      'BLOQUEADO': { label: 'Bloqueado', color: 'danger' }
+                    }}
                     onStatusChange={(newStatus) => handleAlterarStatus(row, newStatus)}
                   />
                 )

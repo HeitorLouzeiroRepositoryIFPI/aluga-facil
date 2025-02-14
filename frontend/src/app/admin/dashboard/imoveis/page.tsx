@@ -116,29 +116,21 @@ export default function ImoveisPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <StatsCard
               title="Total de Imóveis"
-              value={stats.total.toString()}
-              description="Imóveis cadastrados"
+              value={stats.total}
+              color="blue"
             />
             <StatsCard
               title="Imóveis Alugados"
-              value={stats.alugados.toString()}
-              description="Com contratos ativos"
+              value={stats.alugados}
               color="green"
             />
             <StatsCard
               title="Imóveis Disponíveis"
-              value={stats.disponiveis.toString()}
-              description="Para locação"
+              value={stats.disponiveis}
               color="yellow"
-            />
-            <StatsCard
-              title="Valor Total Mensal"
-              value={`R$ ${stats.valorTotal.toFixed(2)}`}
-              description="Em contratos ativos"
-              color="blue"
             />
           </div>
 
@@ -147,19 +139,6 @@ export default function ImoveisPage() {
             onSearchChange={setSearchTerm}
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
-            extraFilter={{
-              label: "Tipo",
-              value: tipoFilter,
-              onChange: setTipoFilter,
-              options: [
-                { label: "Todos", value: "TODOS" },
-                { label: "Casa", value: "CASA" },
-                { label: "Apartamento", value: "APARTAMENTO" },
-                { label: "Comercial", value: "COMERCIAL" },
-                { label: "Terreno", value: "TERRENO" },
-                { label: "Sala Comercial", value: "SALA_COMERCIAL" }
-              ]
-            }}
           />
 
           <DataTable
@@ -199,6 +178,10 @@ export default function ImoveisPage() {
                 accessor: (row) => (
                   <StatusBadge
                     status={row.status}
+                    statusMap={{
+                      'DISPONIVEL': { label: 'Disponível', color: 'success' },
+                      'ALUGADO': { label: 'Alugado', color: 'info' }
+                    }}
                     onStatusChange={(newStatus) => handleStatusChange(row.codigo, newStatus)}
                   />
                 )
