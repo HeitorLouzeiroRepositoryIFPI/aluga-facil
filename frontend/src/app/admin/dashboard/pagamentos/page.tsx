@@ -1,242 +1,166 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "react-hot-toast";
-import { FiPlus, FiRefreshCw } from 'react-icons/fi';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-
-import { PagamentosService, PagamentoDTO } from "@/services/pagamentos";
-import { ProtectedRoute } from "@/components/protected-route";
-import DashboardLayout from "@/app/dashboard/DashboardLayout";
-import { useDataTableState } from "@/hooks/useDataTableState";
-import { DeleteModal } from "@/components/delete-modal/DeleteModal";
-import { calculatePagamentoStats } from "@/utils/stats";
-import { DataTable } from "@/components/data-table/DataTable";
-import { StatusBadge } from "@/components/status-badge/StatusBadge";
-import { StatsCard } from "@/components/stats-card/StatsCard";
-import { SearchFilterBar } from "@/components/search-filter/SearchFilterBar";
-import { ActionButtons } from "@/components/action-buttons/ActionButtons";
-import { Button } from "@/components/ui/button";
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { PagamentoDTO, PagamentoAgrupado, PagamentosService } from '@/services/pagamentos';
+import { Card } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { StatsCard } from '@/components/stats-card/StatsCard';
+import { Button } from '@/components/ui/button';
+import { formatarValor } from '@/utils/formatters';
+import { useRouter } from 'next/navigation';
 
 export default function PagamentosPage() {
   const router = useRouter();
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [pagamentoToDelete, setPagamentoToDelete] = useState<number | null>(null);
-  const [formaPagamentoFilter, setFormaPagamentoFilter] = useState<string>("TODOS");
-  const [stats, setStats] = useState({
-    total: 0,
-    pagos: 0,
-    pendentes: 0,
-    atrasados: 0,
-    valorTotalPago: 0,
-    valorTotalPendente: 0,
-    valorTotalAtrasado: 0
-  });
+  const [pagamentosAgrupados, setPagamentosAgrupados] = useState<PagamentoAgrupado[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const {
-    items: pagamentos,
-    filteredItems: filteredPagamentos,
-    loading,
-    error,
-    searchTerm,
-    statusFilter,
-    currentPage,
-    setSearchTerm,
-    setStatusFilter,
-    setCurrentPage,
-    refresh
-  } = useDataTableState<PagamentoDTO>({
-    fetchItems: PagamentosService.listar,
-    filterItems: (items, search, status) => {
-      return items.filter(pagamento => {
-        const searchLower = search.toLowerCase();
-        const matchesSearch = search === "" ||
-          pagamento.cliente?.nome.toLowerCase().includes(searchLower) ||
-          pagamento.cliente?.cpf.toLowerCase().includes(searchLower) ||
-          pagamento.imovel?.nome.toLowerCase().includes(searchLower) ||
-          pagamento.imovel?.codigo.toLowerCase().includes(searchLower) ||
-          pagamento.formaPagamento.toLowerCase().includes(searchLower);
-        
-        const matchesStatus = status === "TODOS" || pagamento.status === status;
-        const matchesFormaPagamento = formaPagamentoFilter === "TODOS" || pagamento.formaPagamento === formaPagamentoFilter;
-        
-        return matchesSearch && matchesStatus && matchesFormaPagamento;
-      });
+  const carregarPagamentos = useCallback(async () => {
+    try {
+      const dados = await PagamentosService.listarAgrupados();
+      setPagamentosAgrupados(dados);
+    } catch (error) {
+      console.error('Erro ao carregar pagamentos:', error);
+    } finally {
+      setIsLoading(false);
     }
-  });
+  }, []);
 
   useEffect(() => {
-    if (pagamentos.length > 0) {
-      setStats(calculatePagamentoStats(pagamentos));
-    }
-  }, [pagamentos]);
+    carregarPagamentos();
+  }, [carregarPagamentos]);
 
-  const handleStatusChange = async (id: number, novoStatus: string) => {
-    try {
-      await PagamentosService.alterarStatus(id, novoStatus);
-      refresh();
-    } catch (error) {
-      console.error('Erro ao alterar status:', error);
-      toast.error('Erro ao alterar status do pagamento');
-    }
-  };
+  // Calcula as estatísticas totais
+  const estatisticasGerais = useMemo(() => {
+    return pagamentosAgrupados.reduce((acc, grupo) => {
+      acc.totalPagamentos += grupo.totalPagamentos;
+      acc.valorTotal += grupo.valorTotal;
+      acc.pagos += grupo.pagos;
+      acc.valorPago += grupo.valorPago;
+      acc.pendentes += grupo.pendentes;
+      acc.valorPendente += grupo.valorPendente;
+      acc.atrasados += grupo.atrasados;
+      acc.valorAtrasado += grupo.valorAtrasado;
+      return acc;
+    }, {
+      totalPagamentos: 0,
+      valorTotal: 0,
+      pagos: 0,
+      valorPago: 0,
+      pendentes: 0,
+      valorPendente: 0,
+      atrasados: 0,
+      valorAtrasado: 0
+    });
+  }, [pagamentosAgrupados]);
 
-  const handleDelete = (id: number) => {
-    setPagamentoToDelete(id);
-    setDeleteModalOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!pagamentoToDelete) return;
-
-    try {
-      await PagamentosService.excluir(pagamentoToDelete);
-      toast.success('Pagamento excluído com sucesso!');
-      refresh();
-    } catch (error) {
-      console.error('Erro ao excluir pagamento:', error);
-      toast.error('Erro ao excluir pagamento');
-    } finally {
-      setDeleteModalOpen(false);
-      setPagamentoToDelete(null);
-    }
-  };
-
-  const formatarValor = (valor: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(valor);
-  };
+  if (isLoading) {
+    return <div>Carregando...</div>;
+  }
 
   return (
-    <ProtectedRoute allowedTypes={['admin']}>
-      <DashboardLayout>
-        <div className="flex flex-col gap-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Pagamentos</h1>
-            <div className="flex gap-2">
-              <Button onClick={refresh}>
-                <FiRefreshCw className="mr-2" />
-                Atualizar
-              </Button>
-              <Button onClick={() => router.push('/admin/dashboard/pagamentos/cadastrar')}>
-                <FiPlus className="mr-2" />
-                Cadastrar Pagamento
-              </Button>
-            </div>
-          </div>
+    <div className="container mx-auto p-4 space-y-4">
+      <h1 className="text-2xl font-bold mb-4">Pagamentos</h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <StatsCard
-              title="Total de Pagamentos"
-              value={stats.total.toString()}
-              description="Pagamentos registrados"
-            />
-            <StatsCard
-              title="Pagamentos Pagos"
-              value={formatarValor(stats.valorTotalPago)}
-              description={`${stats.pagos} pagamentos`}
-              color="green"
-            />
-            <StatsCard
-              title="Pagamentos Pendentes"
-              value={formatarValor(stats.valorTotalPendente)}
-              description={`${stats.pendentes} pagamentos`}
-              color="yellow"
-            />
-            <StatsCard
-              title="Pagamentos Atrasados"
-              value={formatarValor(stats.valorTotalAtrasado)}
-              description={`${stats.atrasados} pagamentos`}
-              color="red"
-            />
-          </div>
+      {/* Cards de Estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatsCard
+          title="Total de Pagamentos"
+          value={estatisticasGerais.totalPagamentos}
+          description={formatarValor(estatisticasGerais.valorTotal)}
+        />
+        <StatsCard
+          title="Pagamentos Pagos"
+          value={estatisticasGerais.pagos}
+          description={formatarValor(estatisticasGerais.valorPago)}
+          className="bg-green-100"
+        />
+        <StatsCard
+          title="Pagamentos Pendentes"
+          value={estatisticasGerais.pendentes}
+          description={formatarValor(estatisticasGerais.valorPendente)}
+          className="bg-yellow-100"
+        />
+        <StatsCard
+          title="Pagamentos Atrasados"
+          value={estatisticasGerais.atrasados}
+          description={formatarValor(estatisticasGerais.valorAtrasado)}
+          className="bg-red-100"
+        />
+      </div>
 
-          <SearchFilterBar
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-            extraFilter={{
-              label: "Forma de Pagamento",
-              value: formaPagamentoFilter,
-              onChange: setFormaPagamentoFilter,
-              options: [
-                { label: "Todos", value: "TODOS" },
-                { label: "PIX", value: "PIX" },
-                { label: "Cartão", value: "CARTAO" },
-                { label: "Boleto", value: "BOLETO" },
-                { label: "Dinheiro", value: "DINHEIRO" }
-              ]
-            }}
-          />
-
-          <DataTable
-            data={filteredPagamentos}
-            columns={[
-              {
-                header: "Cliente/Imóvel",
-                accessor: (row) => (
+      {/* Tabela de Pagamentos Agrupados */}
+      <Card className="mt-4">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Imóvel</TableHead>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Total</TableHead>
+              <TableHead>Pagos</TableHead>
+              <TableHead>Pendentes</TableHead>
+              <TableHead>Atrasados</TableHead>
+              <TableHead>Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {pagamentosAgrupados.map((grupo) => (
+              <TableRow
+                key={grupo.contratoId}
+                className="cursor-pointer hover:bg-gray-100"
+                onClick={() => router.push(`/admin/dashboard/pagamentos/contrato/${grupo.contratoId}`)}
+              >
+                <TableCell>
                   <div>
-                    <div className="text-sm font-medium">{row.cliente?.nome}</div>
-                    <div className="text-xs text-gray-500">{row.imovel?.nome}</div>
+                    <div className="font-medium">{grupo.imovel?.nome || 'Sem nome'}</div>
+                    <div className="text-sm text-gray-500">{grupo.imovel?.codigo || 'Sem código'}</div>
                   </div>
-                )
-              },
-              {
-                header: "Valor",
-                accessor: (row) => formatarValor(row.valor)
-              },
-              {
-                header: "Data",
-                accessor: (row) => format(new Date(row.dataPagamento), 'dd/MM/yyyy', { locale: ptBR })
-              },
-              {
-                header: "Forma",
-                accessor: (row) => (
-                  <span className="px-2 py-1 text-xs rounded-full bg-gray-100">
-                    {row.formaPagamento}
-                  </span>
-                )
-              },
-              {
-                header: "Status",
-                accessor: (row) => (
-                  <StatusBadge
-                    status={row.status}
-                    onStatusChange={(newStatus) => handleStatusChange(row.id!, newStatus)}
-                  />
-                )
-              },
-              {
-                header: "Ações",
-                accessor: (row) => (
-                  <ActionButtons
-                    onEdit={() => router.push(`/admin/dashboard/pagamentos/editar/${row.id}`)}
-                    onDelete={() => handleDelete(row.id!)}
-                  />
-                )
-              }
-            ]}
-            currentPage={currentPage}
-            itemsPerPage={10}
-            onPageChange={setCurrentPage}
-            loading={loading}
-            error={error}
-          />
-
-          <DeleteModal
-            isOpen={deleteModalOpen}
-            onClose={() => setDeleteModalOpen(false)}
-            onConfirm={confirmDelete}
-            title="Excluir Pagamento"
-            message="Tem certeza que deseja excluir este pagamento? Esta ação não pode ser desfeita."
-          />
-        </div>
-      </DashboardLayout>
-    </ProtectedRoute>
+                </TableCell>
+                <TableCell>
+                  <div>
+                    <div className="font-medium">{grupo.cliente?.nome || 'Sem cliente'}</div>
+                    <div className="text-sm text-gray-500">{grupo.cliente?.cpf || ''}</div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="font-medium">{grupo.totalPagamentos}</div>
+                  <div className="text-sm text-gray-500">{formatarValor(grupo.valorTotal)}</div>
+                </TableCell>
+                <TableCell>
+                  <div className="font-medium text-green-600">{grupo.pagos}</div>
+                  <div className="text-sm text-gray-500">{formatarValor(grupo.valorPago)}</div>
+                </TableCell>
+                <TableCell>
+                  <div className="font-medium text-yellow-600">{grupo.pendentes}</div>
+                  <div className="text-sm text-gray-500">{formatarValor(grupo.valorPendente)}</div>
+                </TableCell>
+                <TableCell>
+                  <div className="font-medium text-red-600">{grupo.atrasados}</div>
+                  <div className="text-sm text-gray-500">{formatarValor(grupo.valorAtrasado)}</div>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/admin/dashboard/pagamentos/contrato/${grupo.contratoId}`);
+                    }}
+                  >
+                    Ver Detalhes
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
+    </div>
   );
 }

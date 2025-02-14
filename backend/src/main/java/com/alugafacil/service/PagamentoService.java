@@ -49,23 +49,21 @@ public class PagamentoService {
     }
     
     @Transactional
-    public void atualizarStatus(Long id, String novoStatus, String formaPagamento) {
+    public Pagamento alterarStatus(Long id, String novoStatus) {
         Pagamento pagamento = buscarPorId(id);
-        
-        if ("PAGO".equals(novoStatus) && !"PAGO".equals(pagamento.getStatus())) {
-            // Criar histórico quando o pagamento é marcado como pago
-            HistoricoPagamento historico = HistoricoPagamento.builder()
-                    .dataPagamento(LocalDate.now())
-                    .valor(pagamento.getValor())
-                    .formaPagamento(formaPagamento)
-                    .build();
-            
-            historico = historicoPagamentoService.criar(historico);
-            pagamento.setHistoricoPagamento(historico);
-        }
-        
         pagamento.setStatus(novoStatus);
-        pagamentoRepository.save(pagamento);
+        return pagamentoRepository.save(pagamento);
+    }
+    
+    @Transactional
+    public Pagamento atualizar(Long id, Pagamento pagamentoAtualizado) {
+        Pagamento pagamento = buscarPorId(id);
+        pagamento.setDataPagamento(pagamentoAtualizado.getDataPagamento());
+        pagamento.setValor(pagamentoAtualizado.getValor());
+        pagamento.setStatus(pagamentoAtualizado.getStatus());
+        pagamento.setAluguel(pagamentoAtualizado.getAluguel());
+        validarPagamento(pagamento);
+        return pagamentoRepository.save(pagamento);
     }
     
     @Transactional
@@ -84,6 +82,10 @@ public class PagamentoService {
         
         if (pagamento.getDataPagamento() == null) {
             throw new BusinessException("Data do pagamento é obrigatória");
+        }
+        
+        if (pagamento.getAluguel() == null) {
+            throw new BusinessException("Aluguel é obrigatório");
         }
     }
 }

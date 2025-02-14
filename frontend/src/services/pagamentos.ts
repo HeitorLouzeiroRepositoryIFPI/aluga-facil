@@ -1,8 +1,11 @@
-import { api } from "@/lib/api";
+import axios from 'axios';
+const api = axios.create({
+  baseURL: 'http://localhost:8080/api',
+});
 
 export interface PagamentoDTO {
   id?: number;
-  contratoId: number;
+  contratoId?: number; 
   valor: number;
   dataPagamento: string;
   status: 'PENDENTE' | 'PAGO' | 'ATRASADO' | 'CANCELADO';
@@ -15,6 +18,26 @@ export interface PagamentoDTO {
   imovel?: {
     codigo: string;
     nome: string;
+  };
+}
+
+export interface PagamentoAgrupado {
+  contratoId: number;
+  valorTotal: number;
+  totalPagamentos: number;
+  pagos: number;
+  valorPago: number;
+  pendentes: number;
+  valorPendente: number;
+  atrasados: number;
+  valorAtrasado: number;
+  imovel?: {
+    codigo: string;
+    nome: string;
+  };
+  cliente?: {
+    nome: string;
+    cpf: string;
   };
 }
 
@@ -46,5 +69,15 @@ export class PagamentosService {
   static async alterarStatus(id: number, novoStatus: string): Promise<PagamentoDTO> {
     const response = await api.patch(`/pagamentos/${id}/status`, { status: novoStatus });
     return response.data;
+  }
+
+  static async listarAgrupados(): Promise<PagamentoAgrupado[]> {
+    try {
+      const response = await api.get('/pagamentos/agrupados');
+      return response.data || [];
+    } catch (error) {
+      console.error('Erro ao listar pagamentos agrupados:', error);
+      return [];
+    }
   }
 }
