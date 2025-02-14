@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { FiArrowLeft, FiPlus } from 'react-icons/fi';
+import { toast } from 'sonner';
 
 import { PagamentosService, PagamentoDTO } from '@/services/pagamentos';
 import { ProtectedRoute } from '@/components/protected-route';
@@ -13,11 +14,13 @@ import { StatusBadge } from '@/components/status-badge/StatusBadge';
 import { StatsCard } from '@/components/stats-card/StatsCard';
 import { Button } from '@/components/ui/button';
 import { formatarValor } from '@/utils/formatters';
+import { PaymentMethodSelect, PaymentMethod } from '@/components/payment-method-select/PaymentMethodSelect';
 
 const STATUS_MAP = {
   PENDENTE: { label: 'Pendente', color: 'warning' },
   PAGO: { label: 'Pago', color: 'success' },
   ATRASADO: { label: 'Atrasado', color: 'danger' },
+  CANCELADO: { label: 'Cancelado', color: 'default' },
 };
 
 export default function PagamentosContratoPage() {
@@ -62,6 +65,22 @@ export default function PagamentosContratoPage() {
       setError('Erro ao carregar os dados do contrato');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdatePayment = async (id: number, updates: { formaPagamento?: PaymentMethod; status?: string }) => {
+    try {
+      if (!id) {
+        toast.error('ID do pagamento inválido');
+        return;
+      }
+      
+      await PagamentosService.atualizar(id, updates);
+      await loadData(); // Recarrega os dados
+      toast.success('Pagamento atualizado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao atualizar pagamento:', error);
+      toast.error('Erro ao atualizar pagamento. Verifique o console para mais detalhes.');
     }
   };
 
@@ -170,7 +189,12 @@ export default function PagamentosContratoPage() {
               },
               {
                 header: "Forma de Pagamento",
-                accessor: (row) => row.formaPagamento || '-'
+                accessor: (row) => (
+                  <PaymentMethodSelect
+                    value={row.formaPagamento as PaymentMethod}
+                    onValueChange={(value) => handleUpdatePayment(row.id, { formaPagamento: value })}
+                  />
+                )
               },
               {
                 header: "Status",
@@ -178,6 +202,7 @@ export default function PagamentosContratoPage() {
                   <StatusBadge 
                     status={row.status} 
                     statusMap={STATUS_MAP}
+                    onStatusChange={(newStatus) => handleUpdatePayment(row.id, { status: newStatus })}
                   />
                 )
               },

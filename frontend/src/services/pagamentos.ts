@@ -41,6 +41,11 @@ export interface PagamentoAgrupado {
   };
 }
 
+export interface PagamentoUpdateDTO {
+  formaPagamento?: 'PIX' | 'CARTAO' | 'BOLETO' | 'DINHEIRO';
+  status?: 'PENDENTE' | 'PAGO' | 'ATRASADO' | 'CANCELADO';
+}
+
 export class PagamentosService {
   static async listar(): Promise<PagamentoDTO[]> {
     const response = await api.get('/pagamentos');
@@ -62,9 +67,14 @@ export class PagamentosService {
     return response.data;
   }
 
-  static async atualizar(id: number, pagamento: Partial<PagamentoDTO>): Promise<PagamentoDTO> {
-    const response = await api.put(`/pagamentos/${id}`, pagamento);
-    return response.data;
+  static async atualizar(id: number, updates: PagamentoUpdateDTO): Promise<PagamentoDTO> {
+    if (updates.status) {
+      return await this.alterarStatus(id, updates.status);
+    }
+    if (updates.formaPagamento) {
+      return await this.alterarFormaPagamento(id, updates.formaPagamento);
+    }
+    throw new Error('Invalid update: must provide either status or formaPagamento');
   }
 
   static async excluir(id: number): Promise<void> {
@@ -73,6 +83,11 @@ export class PagamentosService {
 
   static async alterarStatus(id: number, novoStatus: string): Promise<PagamentoDTO> {
     const response = await api.patch(`/pagamentos/${id}/status`, { status: novoStatus });
+    return response.data;
+  }
+
+  static async alterarFormaPagamento(id: number, formaPagamento: string): Promise<PagamentoDTO> {
+    const response = await api.patch(`/pagamentos/${id}/forma-pagamento`, { formaPagamento });
     return response.data;
   }
 

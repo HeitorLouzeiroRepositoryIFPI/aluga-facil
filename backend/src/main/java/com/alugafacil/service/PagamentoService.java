@@ -6,6 +6,7 @@ import com.alugafacil.model.HistoricoPagamento;
 import com.alugafacil.model.Pagamento;
 import com.alugafacil.repository.PagamentoRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PagamentoService {
     
     private final PagamentoRepository pagamentoRepository;
@@ -54,14 +56,35 @@ public class PagamentoService {
         pagamento.setStatus(novoStatus);
         return pagamentoRepository.save(pagamento);
     }
+
+    @Transactional
+    public Pagamento alterarFormaPagamento(Long id, String formaPagamento) {
+        log.info("Alterando forma de pagamento do pagamento {}: {}", id, formaPagamento);
+        Pagamento pagamento = buscarPorId(id);
+        pagamento.setFormaPagamento(formaPagamento);
+        return pagamentoRepository.save(pagamento);
+    }
     
     @Transactional
     public Pagamento atualizar(Long id, Pagamento pagamentoAtualizado) {
         Pagamento pagamento = buscarPorId(id);
-        pagamento.setDataPagamento(pagamentoAtualizado.getDataPagamento());
-        pagamento.setValor(pagamentoAtualizado.getValor());
-        pagamento.setStatus(pagamentoAtualizado.getStatus());
-        pagamento.setAluguel(pagamentoAtualizado.getAluguel());
+        
+        if (pagamentoAtualizado.getDataPagamento() != null) {
+            pagamento.setDataPagamento(pagamentoAtualizado.getDataPagamento());
+        }
+        if (pagamentoAtualizado.getValor() != null) {
+            pagamento.setValor(pagamentoAtualizado.getValor());
+        }
+        if (pagamentoAtualizado.getStatus() != null) {
+            pagamento.setStatus(pagamentoAtualizado.getStatus());
+        }
+        if (pagamentoAtualizado.getFormaPagamento() != null) {
+            pagamento.setFormaPagamento(pagamentoAtualizado.getFormaPagamento());
+        }
+        if (pagamentoAtualizado.getObservacoes() != null) {
+            pagamento.setObservacoes(pagamentoAtualizado.getObservacoes());
+        }
+        
         validarPagamento(pagamento);
         return pagamentoRepository.save(pagamento);
     }

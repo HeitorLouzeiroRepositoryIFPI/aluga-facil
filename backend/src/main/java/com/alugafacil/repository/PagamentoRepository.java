@@ -15,4 +15,5 @@ public interface PagamentoRepository extends JpaRepository<Pagamento, Long> {
     List<Pagamento> findByDataPagamentoBetween(LocalDate inicio, LocalDate fim);
     List<Pagamento> findByAluguelAndStatus(Aluguel aluguel, String status);
     List<Pagamento> findByAluguelId(Long aluguelId);
+    List<Pagamento> findByStatusAndDataPagamentoLessThanEqual(String status, LocalDate data);
 }

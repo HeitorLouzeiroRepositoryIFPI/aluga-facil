@@ -1,17 +1,15 @@
 package com.alugafacil.controller;
 
-import com.alugafacil.dto.PagamentoDTO;
+
 import com.alugafacil.model.Pagamento;
 import com.alugafacil.service.PagamentoService;
-import com.alugafacil.enums.StatusPagamento;
-import jakarta.validation.Valid;
+import com.alugafacil.service.PagamentoScheduler;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,10 +18,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/pagamentos")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class PagamentoController {
 
-    @Autowired
-    private PagamentoService pagamentoService;
+    private final PagamentoService pagamentoService;
+    private final PagamentoScheduler pagamentoScheduler;
 
     @GetMapping
     public ResponseEntity<List<Pagamento>> listar() {
@@ -37,10 +36,7 @@ public class PagamentoController {
 
     @GetMapping("/contrato/{contratoId}")
     public ResponseEntity<List<Pagamento>> buscarPorContrato(@PathVariable Long contratoId) {
-        List<Pagamento> pagamentos = pagamentoService.listarTodos()
-            .stream()
-            .filter(p -> p.getAluguel() != null && p.getAluguel().getId().equals(contratoId))
-            .toList();
+        List<Pagamento> pagamentos = pagamentoService.listarPorAluguel(contratoId);
         return ResponseEntity.ok(pagamentos);
     }
 
@@ -63,6 +59,16 @@ public class PagamentoController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<Pagamento> alterarStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         return ResponseEntity.ok(pagamentoService.alterarStatus(id, body.get("status")));
+    }
+
+    @PatchMapping("/{id}/forma-pagamento")
+    public ResponseEntity<Pagamento> alterarFormaPagamento(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        log.info("Recebido request para alterar forma de pagamento: {}", body);
+        String formaPagamento = body.get("formaPagamento");
+        if (formaPagamento == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(pagamentoService.alterarFormaPagamento(id, formaPagamento));
     }
 
     @GetMapping("/agrupados")
@@ -97,49 +103,37 @@ public class PagamentoController {
                     return novoGrupo;
                 });
 
-                // Atualiza estatísticas básicas
-                grupo.put("totalPagamentos", ((Integer) grupo.get("totalPagamentos")) + 1);
-                grupo.put("valorTotal", ((Double) grupo.get("valorTotal")) + pagamento.getValor());
+                grupo.put("valorTotal", (Double) grupo.get("valorTotal") + pagamento.getValor());
+                grupo.put("totalPagamentos", (Integer) grupo.get("totalPagamentos") + 1);
 
-                // Atualiza estatísticas por status
-                String status = pagamento.getStatus();
-                if (status != null) {
-                    switch (status.toUpperCase()) {
-                        case "PAGO":
-                            grupo.put("pagos", ((Integer) grupo.get("pagos")) + 1);
-                            grupo.put("valorPago", ((Double) grupo.get("valorPago")) + pagamento.getValor());
-                            break;
-                        case "PENDENTE":
-                            grupo.put("pendentes", ((Integer) grupo.get("pendentes")) + 1);
-                            grupo.put("valorPendente", ((Double) grupo.get("valorPendente")) + pagamento.getValor());
-                            break;
-                        case "ATRASADO":
-                            grupo.put("atrasados", ((Integer) grupo.get("atrasados")) + 1);
-                            grupo.put("valorAtrasado", ((Double) grupo.get("valorAtrasado")) + pagamento.getValor());
-                            break;
-                    }
-                }
-
-                // Adiciona informações do imóvel e cliente se disponíveis
-                if (pagamento.getAluguel().getImovel() != null) {
-                    Map<String, String> imovel = new HashMap<>();
-                    imovel.put("codigo", pagamento.getAluguel().getImovel().getCodigo());
-                    imovel.put("nome", pagamento.getAluguel().getImovel().getNome());
-                    grupo.put("imovel", imovel);
-                }
-
-                if (pagamento.getAluguel().getCliente() != null) {
-                    Map<String, String> cliente = new HashMap<>();
-                    cliente.put("nome", pagamento.getAluguel().getCliente().getNome());
-                    cliente.put("cpf", pagamento.getAluguel().getCliente().getCpf());
-                    grupo.put("cliente", cliente);
+                if ("PAGO".equals(pagamento.getStatus())) {
+                    grupo.put("pagos", (Integer) grupo.get("pagos") + 1);
+                    grupo.put("valorPago", (Double) grupo.get("valorPago") + pagamento.getValor());
+                } else if ("PENDENTE".equals(pagamento.getStatus())) {
+                    grupo.put("pendentes", (Integer) grupo.get("pendentes") + 1);
+                    grupo.put("valorPendente", (Double) grupo.get("valorPendente") + pagamento.getValor());
+                } else if ("ATRASADO".equals(pagamento.getStatus())) {
+                    grupo.put("atrasados", (Integer) grupo.get("atrasados") + 1);
+                    grupo.put("valorAtrasado", (Double) grupo.get("valorAtrasado") + pagamento.getValor());
                 }
             }
             
             resultado.addAll(agrupados.values());
             return ResponseEntity.ok(resultado);
+            
         } catch (Exception e) {
-            log.error("Erro ao listar pagamentos agrupados: ", e);
+            log.error("Erro ao agrupar pagamentos", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/atualizar-status")
+    public ResponseEntity<String> atualizarStatusPagamentos() {
+        try {
+            pagamentoScheduler.atualizarStatusPagamentosManualmente();
+            return ResponseEntity.ok("Status dos pagamentos atualizados com sucesso");
+        } catch (Exception e) {
+            log.error("Erro ao atualizar status dos pagamentos", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Entity
 @Table(name = "pagamentos")
+@Slf4j
 public class Pagamento {
     
     @Id
@@ -45,4 +47,22 @@ public class Pagamento {
     @JoinColumn(name = "historico_id")
     @JsonIgnoreProperties("pagamento")
     private HistoricoPagamento historicoPagamento;
+
+    @PrePersist
+    @PreUpdate
+    public void atualizarStatus() {
+        if (!"PAGO".equals(this.status) && !"CANCELADO".equals(this.status)) {
+            LocalDate hoje = LocalDate.now();
+            log.info("Atualizando status do pagamento {}: Data pagamento: {}, Hoje: {}", 
+                    this.id, this.dataPagamento, hoje);
+            
+            if (this.dataPagamento.isBefore(hoje)) {
+                log.info("Pagamento {} está atrasado", this.id);
+                this.status = "ATRASADO";
+            } else {
+                log.info("Pagamento {} está pendente", this.id);
+                this.status = "PENDENTE";
+            }
+        }
+    }
 }
