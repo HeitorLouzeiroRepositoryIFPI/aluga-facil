@@ -19,6 +19,7 @@ import java.util.List;
 @Table(name = "clientes")
 @PrimaryKeyJoinColumn(name = "usuario_id")
 @EqualsAndHashCode(callSuper = true)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Cliente extends Usuario {
     
     @Column(nullable = false)
@@ -30,8 +31,8 @@ public class Cliente extends Usuario {
     @Column(nullable = false)
     private String status;
     
-    @OneToMany(mappedBy = "cliente")
-    @JsonIgnoreProperties({"cliente", "pagamentos"})
+    @OneToMany(mappedBy = "cliente", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"cliente", "pagamentos", "valorMensal", "taxaAdministracao", "valorDeposito", "diaPagamento", "observacoes"})
     private List<Aluguel> alugueis = new ArrayList<>();
     
     @PrePersist

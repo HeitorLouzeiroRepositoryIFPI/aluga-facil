@@ -30,9 +30,15 @@ public class Pagamento {
     @Column(nullable = false)
     private String status;
     
-    @ManyToOne
+    @Column
+    private String formaPagamento;
+    
+    @Column
+    private String observacoes;
+    
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "aluguel_id", nullable = false)
-    @JsonIgnoreProperties({"pagamentos", "cliente", "imovel"})
+    @JsonIgnoreProperties({"pagamentos"})
     private Aluguel aluguel;
     
     @ManyToOne

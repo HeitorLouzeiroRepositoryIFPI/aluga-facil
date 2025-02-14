@@ -35,6 +35,15 @@ public class PagamentoController {
         return ResponseEntity.ok(pagamentoService.buscarPorId(id));
     }
 
+    @GetMapping("/contrato/{contratoId}")
+    public ResponseEntity<List<Pagamento>> buscarPorContrato(@PathVariable Long contratoId) {
+        List<Pagamento> pagamentos = pagamentoService.listarTodos()
+            .stream()
+            .filter(p -> p.getAluguel() != null && p.getAluguel().getId().equals(contratoId))
+            .toList();
+        return ResponseEntity.ok(pagamentos);
+    }
+
     @PostMapping
     public ResponseEntity<Pagamento> criar(@RequestBody Pagamento pagamento) {
         return ResponseEntity.ok(pagamentoService.criar(pagamento));
@@ -111,28 +120,27 @@ public class PagamentoController {
                     }
                 }
 
-                // Adiciona informações do imóvel e cliente
+                // Adiciona informações do imóvel e cliente se disponíveis
                 if (pagamento.getAluguel().getImovel() != null) {
-                    grupo.put("imovel", Map.of(
-                        "codigo", pagamento.getAluguel().getImovel().getCodigo(),
-                        "nome", pagamento.getAluguel().getImovel().getNome()
-                    ));
+                    Map<String, String> imovel = new HashMap<>();
+                    imovel.put("codigo", pagamento.getAluguel().getImovel().getCodigo());
+                    imovel.put("nome", pagamento.getAluguel().getImovel().getNome());
+                    grupo.put("imovel", imovel);
                 }
 
                 if (pagamento.getAluguel().getCliente() != null) {
-                    grupo.put("cliente", Map.of(
-                        "nome", pagamento.getAluguel().getCliente().getNome(),
-                        "cpf", pagamento.getAluguel().getCliente().getCpf()
-                    ));
+                    Map<String, String> cliente = new HashMap<>();
+                    cliente.put("nome", pagamento.getAluguel().getCliente().getNome());
+                    cliente.put("cpf", pagamento.getAluguel().getCliente().getCpf());
+                    grupo.put("cliente", cliente);
                 }
             }
-
+            
             resultado.addAll(agrupados.values());
             return ResponseEntity.ok(resultado);
-            
         } catch (Exception e) {
-            log.error("Erro ao agrupar pagamentos", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
+            log.error("Erro ao listar pagamentos agrupados: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

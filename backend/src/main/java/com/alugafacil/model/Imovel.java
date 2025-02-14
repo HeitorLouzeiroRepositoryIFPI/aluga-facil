@@ -17,6 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @Table(name = "imoveis")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Imovel {
     
     @Id
@@ -49,13 +50,13 @@ public class Imovel {
     @Column(name = "url")
     private List<String> fotos = new ArrayList<>();
     
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "administrador_id", nullable = false)
     @JsonIgnoreProperties({"imoveis", "senha"})
     @JsonBackReference
     private Administrador administrador;
     
-    @OneToMany(mappedBy = "imovel")
-    @JsonIgnoreProperties({"imovel", "pagamentos"})
+    @OneToMany(mappedBy = "imovel", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"imovel", "pagamentos", "valorMensal", "taxaAdministracao", "valorDeposito", "diaPagamento", "observacoes"})
     private List<Aluguel> alugueis = new ArrayList<>();
 }

@@ -46,14 +46,14 @@ public class Aluguel {
     @Column(nullable = false)
     private String status;
     
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "cliente_id", nullable = false)
-    @JsonIgnoreProperties({"alugueis", "senha"})
+    @JsonIgnoreProperties({"alugueis", "senha", "endereco", "telefone", "status"})
     private Cliente cliente;
     
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "imovel_id", nullable = false)
-    @JsonIgnoreProperties({"alugueis", "administrador"})
+    @JsonIgnoreProperties({"alugueis", "administrador", "descricao", "fotos", "status", "valorMensal", "tipo", "endereco"})
     private Imovel imovel;
     
     @OneToMany(mappedBy = "aluguel", cascade = CascadeType.ALL, orphanRemoval = true)
