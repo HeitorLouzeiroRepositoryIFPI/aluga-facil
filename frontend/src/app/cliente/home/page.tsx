@@ -11,10 +11,12 @@ import { format, parseISO } from "date-fns";
 import { useState } from "react";
 import { toast } from "sonner";
 import api from "@/services/api";
+import { useRouter } from "next/navigation";
 
 export default function ClienteHome() {
   const { data, isLoading, error, refetch } = useClienteDashboardData();
   const [loadingPayment, setLoadingPayment] = useState(false);
+  const router = useRouter();
 
   const formatarData = (dataString: string | undefined) => {
     if (!dataString) return 'Data não disponível';
@@ -76,7 +78,7 @@ export default function ClienteHome() {
   return (
     <ProtectedRoute allowedTypes={['cliente']}>
       <DashboardLayout>
-        <div className="grid auto-rows-min gap-4 md:grid-cols-2">
+        <div className="grid auto-rows-min gap-4 md:grid-cols-3">
           <Card>
             <CardHeader>
               <CardTitle>Aluguéis Ativos</CardTitle>
@@ -89,41 +91,6 @@ export default function ClienteHome() {
             </CardContent>
           </Card>
 
-          {data?.pagamentos.proximo && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Próximo Pagamento</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">
-                  {formatCurrency(data.pagamentos.proximo.valorPendente)}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {data.pagamentos.proximo.dataVencimento ? 
-                    `Vencimento em ${formatarData(data.pagamentos.proximo.dataVencimento)}` :
-                    'Data de vencimento não disponível'
-                  }
-                </p>
-                <Button 
-                  className="mt-4" 
-                  onClick={() => handlePagamento(data.pagamentos.proximo!.contratoId)}
-                  disabled={loadingPayment}
-                >
-                  {loadingPayment ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Processando...
-                    </>
-                  ) : (
-                    'Pagar Agora'
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 mt-4">
           <Card>
             <CardHeader>
               <CardTitle>Pagamentos Pendentes</CardTitle>
@@ -210,8 +177,12 @@ export default function ClienteHome() {
                     </div>
                   )}
 
-                  <div className="flex gap-2 mt-2">
-                    <Button variant="outline" size="sm">
+                  <div className="flex gap-2 mt-2 justify-end">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => router.push(`/cliente/contratos/${aluguel.id}`)}
+                    >
                       Ver Contrato
                     </Button>
                   </div>

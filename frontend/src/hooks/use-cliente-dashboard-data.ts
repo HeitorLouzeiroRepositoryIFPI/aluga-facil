@@ -76,7 +76,6 @@ interface ClienteDashboardData {
     ativos: Aluguel[];
   };
   pagamentos: {
-    proximo: PagamentoAgrupado | null;
     pendentes: {
       quantidade: number;
       valor: number;
@@ -157,11 +156,6 @@ export function useClienteDashboardData() {
           (pag: PagamentoAgrupado) => alugueisIds.includes(pag.contratoId)
         );
 
-        // Encontrar próximo pagamento (primeiro pendente)
-        const proximoPagamento = pagamentosDoCliente.find(
-          (pag: PagamentoAgrupado) => pag.pendentes > 0
-        );
-
         // Somar totais de pagamentos pendentes e atrasados
         const totais = pagamentosDoCliente.reduce((acc, pag: PagamentoAgrupado) => ({
           pendentes: {
@@ -183,7 +177,6 @@ export function useClienteDashboardData() {
             ativos: alugueisAtivos,
           },
           pagamentos: {
-            proximo: proximoPagamento,
             pendentes: totais.pendentes,
             atrasados: totais.atrasados,
           },
