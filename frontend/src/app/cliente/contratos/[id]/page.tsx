@@ -55,6 +55,8 @@ export default function ContratoPage() {
       const response = await api.get(`/alugueis/${contratoId}`);
       return response.data;
     },
+    staleTime: 0, // Sempre buscar dados novos
+    refetchOnMount: true // Refetch quando montar o componente
   });
 
   const formatarData = (dataString: string | undefined) => {

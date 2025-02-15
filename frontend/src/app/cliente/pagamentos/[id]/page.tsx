@@ -4,7 +4,7 @@ import { ProtectedRoute } from "@/components/protected-route";
 import DashboardLayout from "@/app/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/utils";
 import { Loader2, AlertCircle, ArrowLeft, CreditCard, Landmark, QrCode } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -34,6 +34,7 @@ type MetodoPagamento = 'pix' | 'cartao' | 'boleto';
 
 export default function PagamentoPage() {
   const params = useParams();
+  const queryClient = useQueryClient();
   const router = useRouter();
   const pagamentoId = params.id;
   const [loadingPayment, setLoadingPayment] = useState(false);
@@ -70,6 +71,11 @@ export default function PagamentoPage() {
       await api.post(`/pagamentos/${pagamentoId}/pagar`, {
         metodo: selectedMethod
       });
+      
+      // Invalidar os caches
+      await queryClient.invalidateQueries({ queryKey: ["pagamento", pagamentoId] });
+      await queryClient.invalidateQueries({ queryKey: ["contrato", pagamento?.aluguel?.id] });
+      
       toast.success("Pagamento realizado com sucesso!");
       router.push(`/cliente/contratos/${pagamento?.aluguel?.id}`);
     } catch (error) {
