@@ -141,14 +141,6 @@ export default function ClienteHome() {
                       <Home className="w-4 h-4 text-muted-foreground" />
                       <span>Tipo: {aluguel.imovel.tipo}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">Dia Pagto:</span>
-                      <span>{aluguel.diaPagamento}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">Taxa Adm:</span>
-                      <span>{formatCurrency(aluguel.taxaAdministracao)}</span>
-                    </div>
                   </div>
 
                   <div className="flex flex-col md:flex-row justify-between gap-4 pt-4 border-t">

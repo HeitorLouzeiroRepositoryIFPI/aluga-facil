@@ -8,13 +8,12 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarRail,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"
 
-const navItems = [
+const adminNavItems = [
   {
     title: "Dashboard",
     url: "/admin/dashboard",
@@ -33,9 +32,19 @@ const navItems = [
   },
 ]
 
+const clienteNavItems = [
+  {
+    title: "Meus Contratos",
+    url: "/cliente/home",
+    icon: Home,
+  }
+]
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
-  const { signOut, user } = useAuth();
+  const { signOut, user, userType } = useAuth();
+
+  const navItems = userType === 'admin' ? adminNavItems : clienteNavItems;
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -46,26 +55,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navItems} />
+      </SidebarContent>
+      <SidebarFooter>
         <div className="px-3 py-2">
           <Button
             variant="ghost"
-            className="w-full justify-start gap-2"
+            className="w-full justify-start"
             onClick={signOut}
           >
-            <LogOut className="h-4 w-4" />
-            Sair
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Sair</span>
           </Button>
         </div>
-      </SidebarContent>
-      <SidebarFooter>
-        <div className="flex items-center gap-2 px-4 py-2">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium">{user?.nome}</p>
-            <p className="text-xs text-muted-foreground">{user?.email}</p>
-          </div>
-        </div>
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
-  )
+  );
 }
