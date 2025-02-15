@@ -100,6 +100,18 @@ public class PagamentoController {
                     novoGrupo.put("valorPendente", 0.0);
                     novoGrupo.put("atrasados", 0);
                     novoGrupo.put("valorAtrasado", 0.0);
+                    
+                    // Adiciona dados do imóvel
+                    Map<String, String> imovel = new HashMap<>();
+                    imovel.put("codigo", pagamento.getAluguel().getImovel().getCodigo());
+                    imovel.put("nome", pagamento.getAluguel().getImovel().getNome());
+                    novoGrupo.put("imovel", imovel);
+                    // Adiciona dados do cliente
+                    Map<String, String> cliente = new HashMap<>();
+                    cliente.put("nome", pagamento.getAluguel().getCliente().getNome());
+
+                    novoGrupo.put("cliente", cliente);
+                    
                     return novoGrupo;
                 });
 
