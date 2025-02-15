@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 type UserType = 'admin' | 'cliente' | null;
 
@@ -17,6 +18,7 @@ interface AuthContextType {
   setUserType: (type: UserType) => void;
   setUser: (user: User | null) => void;
   isLoading: boolean;
+  signOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,6 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userType, setUserType] = useState<UserType>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     // Check for stored auth data
@@ -62,6 +65,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signOut = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('userType');
+    localStorage.removeItem('alugafacil.token');
+    setUser(null);
+    setUserType(null);
+    router.push('/login');
+  };
+
   return (
     <AuthContext.Provider 
       value={{ 
@@ -69,7 +81,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user, 
         setUserType: handleSetUserType, 
         setUser: handleSetUser,
-        isLoading 
+        isLoading,
+        signOut
       }}
     >
       {children}

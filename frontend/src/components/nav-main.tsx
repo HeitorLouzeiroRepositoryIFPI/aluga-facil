@@ -22,48 +22,27 @@ import {
 
 interface NavItem {
   title: string;
+  url?: string;
   icon: LucideIcon;
   isActive?: boolean;
   children?: {
     title: string;
-    href: string;
+    url: string;
   }[];
 }
 
-const adminItems: NavItem[] = [
-  {
-    title: "Gestão",
-    icon: ChevronRight,
-    isActive: true,
-    children: [
-      { title: "Imóveis", href: "/admin/dashboard/imoveis" },
-      { title: "Clientes", href: "/admin/dashboard/clientes" },
-      { title: "Contratos", href: "/admin/dashboard/contratos" },
-      { title: "Pagamentos", href: "/admin/dashboard/pagamentos" },
-    ],
-  },
-];
+interface Props {
+  items: NavItem[];
+}
 
-const clientItems: NavItem[] = [
-  {
-    title: "Minha Conta",
-    icon: ChevronRight,
-    isActive: true,
-    children: [
-      { title: "Meus Aluguéis", href: "/dashboard/meus-alugueis" },
-      { title: "Pagamentos", href: "/dashboard/meus-pagamentos" },
-    ],
-  },
-];
-
-const NavMain = () => {
+const NavMain = ({ items }: Props) => {
   const router = useRouter();
   const { userType } = useAuth();
 
-  const items = userType === 'admin' ? adminItems : clientItems;
-
-  const handleRedirect = (url: string) => {
-    router.push(url);
+  const handleClick = (item: NavItem) => {
+    if (item.url) {
+      router.push(item.url);
+    }
   };
 
   return (
@@ -72,37 +51,53 @@ const NavMain = () => {
         {userType === 'admin' ? 'Administração' : 'Menu'}
       </SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) => (
-          <Collapsible
-            key={item.title}
-            asChild
-            defaultOpen={item.isActive}
-            className="group/collapsible"
-          >
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title}>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  {item.children?.map((subItem) => (
-                    <SidebarMenuSubItem key={subItem.title}>
-                      <SidebarMenuSubButton 
-                        onClick={() => handleRedirect(subItem.href)}
-                      >
-                        <span>{subItem.title}</span>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  ))}
-                </SidebarMenuSub>
-              </CollapsibleContent>
+        {items.map((item) => {
+          if (item.children) {
+            return (
+              <Collapsible
+                key={item.title}
+                asChild
+                defaultOpen={item.isActive}
+                className="group/collapsible"
+              >
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip={item.title}>
+                      {item.icon && <item.icon className="h-4 w-4" />}
+                      <span>{item.title}</span>
+                      <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {item.children.map((subItem) => (
+                        <SidebarMenuSubItem key={subItem.title}>
+                          <SidebarMenuSubButton 
+                            onClick={() => router.push(subItem.url)}
+                          >
+                            <span>{subItem.title}</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            );
+          }
+
+          return (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton 
+                onClick={() => handleClick(item)}
+                tooltip={item.title}
+              >
+                {item.icon && <item.icon className="h-4 w-4" />}
+                <span>{item.title}</span>
+              </SidebarMenuButton>
             </SidebarMenuItem>
-          </Collapsible>
-        ))}
+          );
+        })}
       </SidebarMenu>
     </SidebarGroup>
   );

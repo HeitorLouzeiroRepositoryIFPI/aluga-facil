@@ -53,12 +53,6 @@ export function LoginForm({
               <span className="sr-only">Aluga Facíl</span>
             </a>
             <h1 className="text-xl font-bold">Bem vindo ao Aluga Facíl</h1>
-            <div className="text-center text-sm">
-              Ainda não tem uma conta?{" "}
-              <a href="#" className="underline underline-offset-4">
-                Crie uma
-              </a>
-            </div>
           </div>
           <div className="flex flex-col gap-6">
             <div className="grid gap-2">
