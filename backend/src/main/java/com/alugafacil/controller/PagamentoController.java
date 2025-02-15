@@ -1,6 +1,5 @@
 package com.alugafacil.controller;
 
-
 import com.alugafacil.model.Pagamento;
 import com.alugafacil.service.PagamentoService;
 import com.alugafacil.service.PagamentoScheduler;
@@ -69,6 +68,42 @@ public class PagamentoController {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok(pagamentoService.alterarFormaPagamento(id, formaPagamento));
+    }
+
+    @PostMapping("/{id}/pagar")
+    public ResponseEntity<?> processarPagamento(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body) {
+        try {
+            log.info("Processando pagamento: {}", body);
+            String metodo = body.get("metodo");
+            
+            if (metodo == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Método de pagamento não especificado"));
+            }
+
+            // Busca o pagamento primeiro
+            Pagamento pagamento = pagamentoService.buscarPorId(id);
+            
+            // Verifica se já está pago
+            if ("PAGO".equals(pagamento.getStatus())) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Este pagamento já foi processado"));
+            }
+
+            // Atualiza a forma de pagamento primeiro
+            pagamentoService.alterarFormaPagamento(id, metodo);
+            
+            // Depois marca como pago, o que também criará o histórico
+            Pagamento pagamentoAtualizado = pagamentoService.alterarStatus(id, "PAGO");
+            
+            return ResponseEntity.ok(pagamentoAtualizado);
+        } catch (Exception e) {
+            log.error("Erro ao processar pagamento: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("message", "Erro ao processar pagamento: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/agrupados")

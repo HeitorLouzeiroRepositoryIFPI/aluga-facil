@@ -11,7 +11,6 @@ import { format, parseISO } from "date-fns";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/services/api";
 import { toast } from "sonner";
-import { useState } from "react";
 
 interface Contrato {
   id: number;
@@ -49,10 +48,8 @@ export default function ContratoPage() {
   const params = useParams();
   const router = useRouter();
   const contratoId = params.id;
-  const [loadingPayment, setLoadingPayment] = useState(false);
-  const [pagamentoEmProcesso, setPagamentoEmProcesso] = useState<number | null>(null);
 
-  const { data: contrato, isLoading, error, refetch } = useQuery<Contrato>({
+  const { data: contrato, isLoading, error } = useQuery<Contrato>({
     queryKey: ["contrato", contratoId],
     queryFn: async () => {
       const response = await api.get(`/alugueis/${contratoId}`);
@@ -69,22 +66,6 @@ export default function ContratoPage() {
     } catch (error) {
       console.error('Erro ao formatar data:', dataString, error);
       return 'Data inválida';
-    }
-  };
-
-  const handlePagamento = async (pagamentoId: number) => {
-    try {
-      setPagamentoEmProcesso(pagamentoId);
-      setLoadingPayment(true);
-      await api.post(`/pagamentos/${pagamentoId}/pagar`);
-      await refetch();
-      toast.success("Pagamento realizado com sucesso!");
-    } catch (error) {
-      console.error("Erro ao processar pagamento:", error);
-      toast.error("Erro ao processar pagamento. Tente novamente.");
-    } finally {
-      setLoadingPayment(false);
-      setPagamentoEmProcesso(null);
     }
   };
 
@@ -231,17 +212,9 @@ export default function ContratoPage() {
                         {(pagamento.status === 'PENDENTE' || pagamento.status === 'ATRASADO') && (
                           <Button
                             size="sm"
-                            onClick={() => handlePagamento(pagamento.id)}
-                            disabled={loadingPayment}
+                            onClick={() => router.push(`/cliente/pagamentos/${pagamento.id}`)}
                           >
-                            {loadingPayment && pagamentoEmProcesso === pagamento.id ? (
-                              <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Processando...
-                              </>
-                            ) : (
-                              'Pagar'
-                            )}
+                            Pagar
                           </Button>
                         )}
                       </div>

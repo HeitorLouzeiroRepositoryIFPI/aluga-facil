@@ -1,6 +1,7 @@
 package com.alugafacil.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,26 +44,30 @@ public class Pagamento {
     @JsonIgnoreProperties({"pagamentos"})
     private Aluguel aluguel;
     
-    @ManyToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "historico_id")
-    @JsonIgnoreProperties("pagamento")
+    @JsonManagedReference
     private HistoricoPagamento historicoPagamento;
 
     @PrePersist
     @PreUpdate
     public void atualizarStatus() {
-        if (!"PAGO".equals(this.status) && !"CANCELADO".equals(this.status)) {
-            LocalDate hoje = LocalDate.now();
-            log.info("Atualizando status do pagamento {}: Data pagamento: {}, Hoje: {}", 
-                    this.id, this.dataPagamento, hoje);
-            
-            if (this.dataPagamento.isBefore(hoje)) {
-                log.info("Pagamento {} está atrasado", this.id);
-                this.status = "ATRASADO";
-            } else {
-                log.info("Pagamento {} está pendente", this.id);
-                this.status = "PENDENTE";
-            }
+        // Se já estiver pago ou cancelado, não altera o status
+        if ("PAGO".equals(this.status) || "CANCELADO".equals(this.status)) {
+            return;
+        }
+        
+        // Se não tiver status definido ou for PENDENTE/ATRASADO, atualiza baseado na data
+        LocalDate hoje = LocalDate.now();
+        log.info("Atualizando status do pagamento {}: Data pagamento: {}, Hoje: {}", 
+                this.id, this.dataPagamento, hoje);
+        
+        if (this.dataPagamento.isBefore(hoje)) {
+            log.info("Pagamento {} está atrasado", this.id);
+            this.status = "ATRASADO";
+        } else {
+            log.info("Pagamento {} está pendente", this.id);
+            this.status = "PENDENTE";
         }
     }
 }

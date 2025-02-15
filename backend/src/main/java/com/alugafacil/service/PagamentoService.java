@@ -53,6 +53,21 @@ public class PagamentoService {
     @Transactional
     public Pagamento alterarStatus(Long id, String novoStatus) {
         Pagamento pagamento = buscarPorId(id);
+        
+        // Se estiver marcando como pago, registra a data de pagamento
+        if ("PAGO".equals(novoStatus)) {
+            pagamento.setDataPagamento(LocalDate.now());
+            
+            // Criar histórico do pagamento
+            HistoricoPagamento historico = new HistoricoPagamento();
+            historico.setDataPagamento(LocalDate.now());
+            historico.setValor(pagamento.getValor());
+            historico.setFormaPagamento(pagamento.getFormaPagamento());
+            historico.setPagamento(pagamento);
+            
+            pagamento.setHistoricoPagamento(historico);
+        }
+        
         pagamento.setStatus(novoStatus);
         return pagamentoRepository.save(pagamento);
     }

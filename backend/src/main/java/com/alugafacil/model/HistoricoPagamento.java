@@ -1,7 +1,6 @@
 package com.alugafacil.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Data
 @Builder
@@ -32,7 +30,7 @@ public class HistoricoPagamento {
     @Column(nullable = false)
     private String formaPagamento;
     
-    @OneToMany(mappedBy = "historicoPagamento", cascade = CascadeType.ALL)
-    @JsonManagedReference
-    private List<Pagamento> pagamentos;
+    @OneToOne(mappedBy = "historicoPagamento")
+    @JsonBackReference
+    private Pagamento pagamento;
 }
