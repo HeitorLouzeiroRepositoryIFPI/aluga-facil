@@ -7,7 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 
@@ -17,8 +18,9 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Entity
 @Table(name = "pagamentos")
-@Slf4j
 public class Pagamento {
+    
+    private static final Logger logger = LoggerFactory.getLogger(Pagamento.class);
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,6 +28,9 @@ public class Pagamento {
     
     @Column
     private LocalDate dataPagamento;
+    
+    @Column(nullable = false)
+    private LocalDate dataVencimento;
     
     @Column(nullable = false)
     private Double valor;
@@ -59,14 +64,14 @@ public class Pagamento {
         
         // Se não tiver status definido ou for PENDENTE/ATRASADO, atualiza baseado na data
         LocalDate hoje = LocalDate.now();
-        log.info("Atualizando status do pagamento {}: Data pagamento: {}, Hoje: {}", 
+        logger.info("Atualizando status do pagamento {}: Data pagamento: {}, Hoje: {}", 
                 this.id, this.dataPagamento, hoje);
         
         if (this.dataPagamento != null && this.dataPagamento.isBefore(hoje)) {
-            log.info("Pagamento {} está atrasado", this.id);
+            logger.info("Pagamento {} está atrasado", this.id);
             this.status = "ATRASADO";
         } else {
-            log.info("Pagamento {} está pendente", this.id);
+            logger.info("Pagamento {} está pendente", this.id);
             this.status = "PENDENTE";
         }
     }

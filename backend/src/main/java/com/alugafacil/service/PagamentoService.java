@@ -122,7 +122,7 @@ public class PagamentoService {
             Pagamento pagamentoExistente = buscarPorId(id);
             
             pagamentoExistente.setValor(pagamentoAtualizado.getValor());
-            pagamentoExistente.setDataVencimento(pagamentoAtualizado.getDataVencimento());
+            pagamentoExistente.setDataPagamento(pagamentoAtualizado.getDataPagamento());
             pagamentoExistente.setStatus(pagamentoAtualizado.getStatus());
             pagamentoExistente.setFormaPagamento(pagamentoAtualizado.getFormaPagamento());
             

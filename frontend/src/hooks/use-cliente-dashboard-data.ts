@@ -50,7 +50,7 @@ interface Aluguel {
 interface Pagamento {
   id: number;
   valor: number;
-  dataVencimento: string; // formato: YYYY-MM-DD
+  dataPagamento: string; // formato: YYYY-MM-DD
   status: string;
   aluguel: Aluguel;
 }
@@ -66,7 +66,7 @@ interface PagamentoAgrupado {
   atrasados: number;
   valorAtrasado: number;
   status: string;
-  dataVencimento?: string; // formato: YYYY-MM-DD
+  dataPagamento?: string; // formato: YYYY-MM-DD
 }
 
 interface ClienteDashboardData {
