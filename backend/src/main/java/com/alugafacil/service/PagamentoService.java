@@ -23,14 +23,26 @@ public class PagamentoService {
     
     @Transactional
     public Pagamento criar(Pagamento pagamento) {
-        validarPagamento(pagamento);
-        return pagamentoRepository.save(pagamento);
+        try {
+            log.info("Criando pagamento: {}", pagamento);
+            validarPagamento(pagamento);
+            return salvar(pagamento);
+        } catch (Exception e) {
+            log.error("Erro ao criar pagamento: ", e);
+            throw new BusinessException("Erro ao criar pagamento: " + e.getMessage());
+        }
     }
 
     @Transactional
     public List<Pagamento> criarTodos(List<Pagamento> pagamentos) {
-        pagamentos.forEach(this::validarPagamento);
-        return pagamentoRepository.saveAll(pagamentos);
+        try {
+            log.info("Criando pagamentos: {}", pagamentos);
+            pagamentos.forEach(this::validarPagamento);
+            return pagamentoRepository.saveAll(pagamentos);
+        } catch (Exception e) {
+            log.error("Erro ao criar pagamentos: ", e);
+            throw new BusinessException("Erro ao criar pagamentos: " + e.getMessage());
+        }
     }
     
     public Pagamento buscarPorId(Long id) {
@@ -51,66 +63,101 @@ public class PagamentoService {
     }
     
     @Transactional
-    public Pagamento alterarStatus(Long id, String novoStatus) {
-        Pagamento pagamento = buscarPorId(id);
-        
-        // Se estiver marcando como pago, registra a data de pagamento
-        if ("PAGO".equals(novoStatus)) {
-            pagamento.setDataPagamento(LocalDate.now());
-            
-            // Criar histórico do pagamento
-            HistoricoPagamento historico = new HistoricoPagamento();
-            historico.setDataPagamento(LocalDate.now());
-            historico.setValor(pagamento.getValor());
-            historico.setFormaPagamento(pagamento.getFormaPagamento());
-            historico.setPagamento(pagamento);
-            
-            pagamento.setHistoricoPagamento(historico);
+    public Pagamento salvar(Pagamento pagamento) {
+        try {
+            log.info("Salvando pagamento: {}", pagamento);
+            return pagamentoRepository.save(pagamento);
+        } catch (Exception e) {
+            log.error("Erro ao salvar pagamento: ", e);
+            throw new BusinessException("Erro ao salvar pagamento: " + e.getMessage());
         }
-        
-        pagamento.setStatus(novoStatus);
-        return pagamentoRepository.save(pagamento);
+    }
+
+    @Transactional
+    public Pagamento alterarStatus(Long id, String novoStatus) {
+        try {
+            log.info("Alterando status do pagamento {} para {}", id, novoStatus);
+            Pagamento pagamento = buscarPorId(id);
+            
+            // Se estiver marcando como pago, registra a data de pagamento
+            if ("PAGO".equals(novoStatus)) {
+                pagamento.setDataPagamento(LocalDate.now());
+                
+                // Criar histórico do pagamento
+                HistoricoPagamento historico = new HistoricoPagamento();
+                historico.setDataPagamento(LocalDate.now());
+                historico.setValor(pagamento.getValor());
+                historico.setFormaPagamento(pagamento.getFormaPagamento());
+                historico.setPagamento(pagamento);
+                
+                historicoPagamentoService.salvar(historico);
+                pagamento.setHistoricoPagamento(historico);
+            }
+            
+            pagamento.setStatus(novoStatus);
+            return salvar(pagamento);
+        } catch (Exception e) {
+            log.error("Erro ao alterar status do pagamento: ", e);
+            throw new BusinessException("Erro ao alterar status do pagamento: " + e.getMessage());
+        }
     }
 
     @Transactional
     public Pagamento alterarFormaPagamento(Long id, String formaPagamento) {
-        log.info("Alterando forma de pagamento do pagamento {}: {}", id, formaPagamento);
-        Pagamento pagamento = buscarPorId(id);
-        pagamento.setFormaPagamento(formaPagamento);
-        return pagamentoRepository.save(pagamento);
+        try {
+            log.info("Alterando forma de pagamento do pagamento {} para {}", id, formaPagamento);
+            Pagamento pagamento = buscarPorId(id);
+            pagamento.setFormaPagamento(formaPagamento);
+            return salvar(pagamento);
+        } catch (Exception e) {
+            log.error("Erro ao alterar forma de pagamento: ", e);
+            throw new BusinessException("Erro ao alterar forma de pagamento: " + e.getMessage());
+        }
     }
     
     @Transactional
     public Pagamento atualizar(Long id, Pagamento pagamentoAtualizado) {
-        Pagamento pagamento = buscarPorId(id);
-        
-        if (pagamentoAtualizado.getDataPagamento() != null) {
-            pagamento.setDataPagamento(pagamentoAtualizado.getDataPagamento());
+        try {
+            log.info("Atualizando pagamento: {}", pagamentoAtualizado);
+            Pagamento pagamento = buscarPorId(id);
+            
+            if (pagamentoAtualizado.getDataPagamento() != null) {
+                pagamento.setDataPagamento(pagamentoAtualizado.getDataPagamento());
+            }
+            if (pagamentoAtualizado.getValor() != null) {
+                pagamento.setValor(pagamentoAtualizado.getValor());
+            }
+            if (pagamentoAtualizado.getStatus() != null) {
+                pagamento.setStatus(pagamentoAtualizado.getStatus());
+            }
+            if (pagamentoAtualizado.getFormaPagamento() != null) {
+                pagamento.setFormaPagamento(pagamentoAtualizado.getFormaPagamento());
+            }
+            if (pagamentoAtualizado.getObservacoes() != null) {
+                pagamento.setObservacoes(pagamentoAtualizado.getObservacoes());
+            }
+            
+            validarPagamento(pagamento);
+            return salvar(pagamento);
+        } catch (Exception e) {
+            log.error("Erro ao atualizar pagamento: ", e);
+            throw new BusinessException("Erro ao atualizar pagamento: " + e.getMessage());
         }
-        if (pagamentoAtualizado.getValor() != null) {
-            pagamento.setValor(pagamentoAtualizado.getValor());
-        }
-        if (pagamentoAtualizado.getStatus() != null) {
-            pagamento.setStatus(pagamentoAtualizado.getStatus());
-        }
-        if (pagamentoAtualizado.getFormaPagamento() != null) {
-            pagamento.setFormaPagamento(pagamentoAtualizado.getFormaPagamento());
-        }
-        if (pagamentoAtualizado.getObservacoes() != null) {
-            pagamento.setObservacoes(pagamentoAtualizado.getObservacoes());
-        }
-        
-        validarPagamento(pagamento);
-        return pagamentoRepository.save(pagamento);
     }
     
     @Transactional
     public void excluir(Long id) {
-        Pagamento pagamento = buscarPorId(id);
-        if (pagamento.getHistoricoPagamento() != null) {
-            throw new BusinessException("Não é possível excluir um pagamento já realizado");
+        try {
+            log.info("Excluindo pagamento: {}", id);
+            Pagamento pagamento = buscarPorId(id);
+            if (pagamento.getHistoricoPagamento() != null) {
+                throw new BusinessException("Não é possível excluir um pagamento já realizado");
+            }
+            pagamentoRepository.delete(pagamento);
+        } catch (Exception e) {
+            log.error("Erro ao excluir pagamento: ", e);
+            throw new BusinessException("Erro ao excluir pagamento: " + e.getMessage());
         }
-        pagamentoRepository.delete(pagamento);
     }
     
     private void validarPagamento(Pagamento pagamento) {

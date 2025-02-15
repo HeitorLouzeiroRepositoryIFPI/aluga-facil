@@ -14,7 +14,7 @@ import { StatusBadge } from '@/components/status-badge/StatusBadge';
 import { StatsCard } from '@/components/stats-card/StatsCard';
 import { Button } from '@/components/ui/button';
 import { formatarValor } from '@/utils/formatters';
-import { PaymentMethodSelect, PaymentMethod } from '@/components/payment-method-select/PaymentMethodSelect';
+import { PaymentMethodSelect, PaymentMethod, PAYMENT_METHODS } from '@/components/payment-method-select/PaymentMethodSelect';
 
 const STATUS_MAP = {
   PENDENTE: { label: 'Pendente', color: 'warning' },
@@ -37,11 +37,80 @@ export default function PagamentosContratoPage() {
     clienteNome?: string;
   } | null>(null);
 
+  const [stats, setStats] = useState({
+    total: 0,
+    valorTotal: 0,
+    pagos: 0,
+    valorPago: 0,
+    pendentes: 0,
+    valorPendente: 0,
+    atrasados: 0,
+    valorAtrasado: 0,
+  });
+
+  const calcularEstatisticas = (pagamentos: PagamentoDTO[]) => {
+    return {
+      total: pagamentos.length,
+      valorTotal: pagamentos.reduce((acc, p) => acc + (Number(p.valor) || 0), 0),
+      pagos: pagamentos.filter(p => p.status === 'PAGO').length,
+      valorPago: pagamentos.filter(p => p.status === 'PAGO').reduce((acc, p) => acc + (Number(p.valor) || 0), 0),
+      pendentes: pagamentos.filter(p => p.status === 'PENDENTE').length,
+      valorPendente: pagamentos.filter(p => p.status === 'PENDENTE').reduce((acc, p) => acc + (Number(p.valor) || 0), 0),
+      atrasados: pagamentos.filter(p => p.status === 'ATRASADO').length,
+      valorAtrasado: pagamentos.filter(p => p.status === 'ATRASADO').reduce((acc, p) => acc + (Number(p.valor) || 0), 0),
+    };
+  };
+
   useEffect(() => {
     if (contratoId) {
       loadData();
     }
   }, [contratoId]);
+
+  useEffect(() => {
+    setStats(calcularEstatisticas(pagamentos));
+  }, [pagamentos]);
+
+  const handleUpdatePayment = async (id: number, updates: { formaPagamento?: PaymentMethod; status?: string }) => {
+    try {
+      if (!id) {
+        toast.error('ID do pagamento inválido');
+        return;
+      }
+      
+      const pagamentoAtualizado = await PagamentosService.atualizar(id, updates);
+      
+      // Atualiza o pagamento na lista local
+      setPagamentos(pagamentos.map(p => 
+        p.id === id ? { ...p, ...updates } : p
+      ));
+
+      toast.success('Pagamento atualizado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao atualizar pagamento:', error);
+      toast.error('Erro ao atualizar pagamento. Verifique o console para mais detalhes.');
+      // Se houver erro, recarrega os dados para garantir consistência
+      await loadData();
+    }
+  };
+
+  const handleConfirmPayment = async (pagamentoId: number, method: PaymentMethod) => {
+    try {
+      console.log('Confirmando pagamento:', { pagamentoId, method });
+      
+      // Primeiro atualiza a forma de pagamento
+      await PagamentosService.alterarFormaPagamento(pagamentoId, method);
+      
+      // Depois marca como pago
+      await PagamentosService.alterarStatus(pagamentoId, 'PAGO');
+      
+      toast.success('Pagamento confirmado com sucesso!');
+      await loadData();
+    } catch (error) {
+      console.error('Erro ao confirmar pagamento:', error);
+      toast.error('Erro ao confirmar pagamento');
+    }
+  };
 
   const loadData = async () => {
     if (!contratoId) return;
@@ -66,33 +135,6 @@ export default function PagamentosContratoPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleUpdatePayment = async (id: number, updates: { formaPagamento?: PaymentMethod; status?: string }) => {
-    try {
-      if (!id) {
-        toast.error('ID do pagamento inválido');
-        return;
-      }
-      
-      await PagamentosService.atualizar(id, updates);
-      await loadData(); // Recarrega os dados
-      toast.success('Pagamento atualizado com sucesso!');
-    } catch (error) {
-      console.error('Erro ao atualizar pagamento:', error);
-      toast.error('Erro ao atualizar pagamento. Verifique o console para mais detalhes.');
-    }
-  };
-
-  const stats = {
-    total: pagamentos.length,
-    valorTotal: pagamentos.reduce((acc, p) => acc + (Number(p.valor) || 0), 0),
-    pagos: pagamentos.filter(p => p.status === 'PAGO').length,
-    valorPago: pagamentos.filter(p => p.status === 'PAGO').reduce((acc, p) => acc + (Number(p.valor) || 0), 0),
-    pendentes: pagamentos.filter(p => p.status === 'PENDENTE').length,
-    valorPendente: pagamentos.filter(p => p.status === 'PENDENTE').reduce((acc, p) => acc + (Number(p.valor) || 0), 0),
-    atrasados: pagamentos.filter(p => p.status === 'ATRASADO').length,
-    valorAtrasado: pagamentos.filter(p => p.status === 'ATRASADO').reduce((acc, p) => acc + (Number(p.valor) || 0), 0),
   };
 
   if (loading) {
@@ -180,10 +222,20 @@ export default function PagamentosContratoPage() {
               {
                 header: "Forma de Pagamento",
                 accessor: (row) => (
-                  <PaymentMethodSelect
-                    value={row.formaPagamento as PaymentMethod}
-                    onValueChange={(value) => handleUpdatePayment(row.id, { formaPagamento: value })}
-                  />
+                  <div className="flex flex-col">
+                    {row.status === 'PAGO' ? (
+                      <div className="text-sm text-gray-900">
+                        {row.formaPagamento ? PAYMENT_METHODS[row.formaPagamento as PaymentMethod] || row.formaPagamento : '-'}
+                      </div>
+                    ) : (
+                      <PaymentMethodSelect
+                        value={row.formaPagamento as PaymentMethod}
+                        onValueChange={(value) => handleUpdatePayment(row.id, { formaPagamento: value })}
+                        onConfirmPayment={(method) => handleConfirmPayment(row.id, method)}
+                        disabled={row.status === 'PAGO'}
+                      />
+                    )}
+                  </div>
                 )
               },
               {

@@ -29,7 +29,7 @@ interface Pagamento {
   };
 }
 
-type MetodoPagamento = 'pix' | 'cartao' | 'boleto';
+type MetodoPagamento = 'PIX' | 'CARTAO' | 'BOLETO';
 
 export default function PagamentoPage() {
   const params = useParams();
@@ -37,7 +37,7 @@ export default function PagamentoPage() {
   const router = useRouter();
   const pagamentoId = params.id;
   const [loadingPayment, setLoadingPayment] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState<MetodoPagamento>('pix');
+  const [selectedMethod, setSelectedMethod] = useState<MetodoPagamento>('PIX');
 
   const { data: pagamento, isLoading, error } = useQuery<Pagamento>({
     queryKey: ["pagamento", pagamentoId],
@@ -171,22 +171,22 @@ export default function PagamentoPage() {
                   className="space-y-4"
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="pix" id="pix" />
+                    <RadioGroupItem value="PIX" id="pix" />
                     <Label htmlFor="pix" className="flex items-center gap-2">
                       <QrCode className="w-4 h-4" />
                       PIX
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="cartao" id="cartao" />
-                    <Label htmlFor="cartao" className="flex items-center gap-2">
+                    <RadioGroupItem value="CARTAO" id="CARTAO" />
+                    <Label htmlFor="CARTAO" className="flex items-center gap-2">
                       <CreditCard className="w-4 h-4" />
                       Cartão de Crédito
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="boleto" id="boleto" />
-                    <Label htmlFor="boleto" className="flex items-center gap-2">
+                    <RadioGroupItem value="BOLETO" id="BOLETO" />
+                    <Label htmlFor="BOLETO" className="flex items-center gap-2">
                       <Landmark className="w-4 h-4" />
                       Boleto Bancário
                     </Label>

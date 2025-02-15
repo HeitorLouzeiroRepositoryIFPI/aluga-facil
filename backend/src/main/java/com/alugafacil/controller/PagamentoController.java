@@ -2,9 +2,9 @@ package com.alugafacil.controller;
 
 import com.alugafacil.model.Pagamento;
 import com.alugafacil.service.PagamentoService;
+import com.alugafacil.service.HistoricoPagamentoService;
 import com.alugafacil.service.PagamentoScheduler;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -17,14 +17,20 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/pagamentos")
 @CrossOrigin(origins = "*")
-@RequiredArgsConstructor
 public class PagamentoController {
 
     private final PagamentoService pagamentoService;
+    private final HistoricoPagamentoService historicoPagamentoService;
     private final PagamentoScheduler pagamentoScheduler;
 
+    public PagamentoController(PagamentoService pagamentoService, HistoricoPagamentoService historicoPagamentoService, PagamentoScheduler pagamentoScheduler) {
+        this.pagamentoService = pagamentoService;
+        this.historicoPagamentoService = historicoPagamentoService;
+        this.pagamentoScheduler = pagamentoScheduler;
+    }
+
     @GetMapping
-    public ResponseEntity<List<Pagamento>> listar() {
+    public ResponseEntity<List<Pagamento>> listarTodos() {
         return ResponseEntity.ok(pagamentoService.listarTodos());
     }
 
@@ -55,19 +61,58 @@ public class PagamentoController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<Pagamento> alterarStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
-        return ResponseEntity.ok(pagamentoService.alterarStatus(id, body.get("status")));
+    @PatchMapping("/{id}")
+    public ResponseEntity<Pagamento> atualizarPagamento(@PathVariable Long id, @RequestBody Map<String, String> updates) {
+        try {
+            log.info("Atualizando pagamento {}: {}", id, updates);
+
+            Pagamento pagamento = pagamentoService.buscarPorId(id);
+            log.info("Pagamento encontrado: {}", pagamento);
+
+            if (updates.containsKey("formaPagamento")) {
+                String formaPagamento = updates.get("formaPagamento");
+                log.info("Atualizando forma de pagamento para: {}", formaPagamento);
+                pagamento = pagamentoService.alterarFormaPagamento(id, formaPagamento);
+            }
+
+            if (updates.containsKey("status")) {
+                String status = updates.get("status");
+                log.info("Atualizando status para: {}", status);
+                pagamento = pagamentoService.alterarStatus(id, status);
+            } else if (updates.containsKey("formaPagamento")) {
+                // Se atualizou a forma de pagamento mas não tem status, marca como PAGO
+                log.info("Marcando pagamento como PAGO pois atualizou forma de pagamento");
+                pagamento = pagamentoService.alterarStatus(id, "PAGO");
+            }
+
+            log.info("Pagamento atualizado com sucesso: {}", pagamento);
+            return ResponseEntity.ok(pagamento);
+        } catch (Exception e) {
+            log.error("Erro ao atualizar pagamento: ", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao atualizar pagamento: " + e.getMessage(), e);
+        }
     }
 
     @PatchMapping("/{id}/forma-pagamento")
-    public ResponseEntity<Pagamento> alterarFormaPagamento(@PathVariable Long id, @RequestBody Map<String, String> body) {
-        log.info("Recebido request para alterar forma de pagamento: {}", body);
-        String formaPagamento = body.get("formaPagamento");
-        if (formaPagamento == null) {
-            return ResponseEntity.badRequest().build();
+    public ResponseEntity<Pagamento> alterarFormaPagamento(@PathVariable Long id, @RequestBody Map<String, String> updates) {
+        String formaPagamento = updates.get("formaPagamento");
+        try {
+            Pagamento pagamentoAtualizado = pagamentoService.alterarFormaPagamento(id, formaPagamento);
+            return ResponseEntity.ok(pagamentoAtualizado);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao atualizar forma de pagamento", e);
         }
-        return ResponseEntity.ok(pagamentoService.alterarFormaPagamento(id, formaPagamento));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Pagamento> alterarStatus(@PathVariable Long id, @RequestBody Map<String, String> updates) {
+        String status = updates.get("status");
+        try {
+            Pagamento pagamentoAtualizado = pagamentoService.alterarStatus(id, status);
+            return ResponseEntity.ok(pagamentoAtualizado);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao atualizar status", e);
+        }
     }
 
     @PostMapping("/{id}/pagar")
@@ -77,7 +122,7 @@ public class PagamentoController {
         try {
             log.info("Processando pagamento: {}", body);
             String metodo = body.get("metodo");
-            
+
             if (metodo == null) {
                 return ResponseEntity.badRequest()
                     .body(Map.of("message", "Método de pagamento não especificado"));
@@ -85,7 +130,7 @@ public class PagamentoController {
 
             // Busca o pagamento primeiro
             Pagamento pagamento = pagamentoService.buscarPorId(id);
-            
+
             // Verifica se já está pago
             if ("PAGO".equals(pagamento.getStatus())) {
                 return ResponseEntity.badRequest()
@@ -94,10 +139,10 @@ public class PagamentoController {
 
             // Atualiza a forma de pagamento primeiro
             pagamentoService.alterarFormaPagamento(id, metodo);
-            
+
             // Depois marca como pago, o que também criará o histórico
             Pagamento pagamentoAtualizado = pagamentoService.alterarStatus(id, "PAGO");
-            
+
             return ResponseEntity.ok(pagamentoAtualizado);
         } catch (Exception e) {
             log.error("Erro ao processar pagamento: {}", e.getMessage(), e);
@@ -111,9 +156,9 @@ public class PagamentoController {
         try {
             List<Pagamento> pagamentos = pagamentoService.listarTodos();
             List<Map<String, Object>> resultado = new ArrayList<>();
-            
+
             Map<Long, Map<String, Object>> agrupados = new HashMap<>();
-            
+
             for (Pagamento pagamento : pagamentos) {
                 if (pagamento == null || pagamento.getAluguel() == null) {
                     continue;
@@ -135,7 +180,7 @@ public class PagamentoController {
                     novoGrupo.put("valorPendente", 0.0);
                     novoGrupo.put("atrasados", 0);
                     novoGrupo.put("valorAtrasado", 0.0);
-                    
+
                     // Adiciona dados do imóvel
                     Map<String, String> imovel = new HashMap<>();
                     imovel.put("codigo", pagamento.getAluguel().getImovel().getCodigo());
@@ -146,7 +191,7 @@ public class PagamentoController {
                     cliente.put("nome", pagamento.getAluguel().getCliente().getNome());
 
                     novoGrupo.put("cliente", cliente);
-                    
+
                     return novoGrupo;
                 });
 
@@ -164,10 +209,10 @@ public class PagamentoController {
                     grupo.put("valorAtrasado", (Double) grupo.get("valorAtrasado") + pagamento.getValor());
                 }
             }
-            
+
             resultado.addAll(agrupados.values());
             return ResponseEntity.ok(resultado);
-            
+
         } catch (Exception e) {
             log.error("Erro ao agrupar pagamentos", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
