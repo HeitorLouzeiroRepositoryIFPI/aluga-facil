@@ -125,6 +125,26 @@ export class PagamentosService {
     }
   }
 
+  static async confirmarPagamento(id: number, formaPagamento: PaymentMethod): Promise<PagamentoDTO> {
+    try {
+      console.log('Confirmando pagamento:', { id, formaPagamento });
+      const response = await api.post(`pagamentos/${id}/pagar`, {
+        metodo: formaPagamento
+      });
+      console.log('Resposta da API:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao confirmar pagamento:', error);
+      if (error.response) {
+        console.error('Detalhes do erro:', {
+          status: error.response.status,
+          data: error.response.data
+        });
+      }
+      throw error;
+    }
+  }
+
   static async excluir(id: number): Promise<void> {
     await api.delete(`pagamentos/${id}`);
   }

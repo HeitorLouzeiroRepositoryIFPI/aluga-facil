@@ -78,18 +78,22 @@ export default function PagamentosContratoPage() {
         return;
       }
       
-      const pagamentoAtualizado = await PagamentosService.atualizar(id, updates);
+      // Se tiver forma de pagamento, usa o endpoint específico
+      if (updates.formaPagamento) {
+        await PagamentosService.alterarFormaPagamento(id, updates.formaPagamento);
+      } 
+      // Se tiver apenas status, usa o endpoint de status
+      else if (updates.status) {
+        await PagamentosService.alterarStatus(id, updates.status);
+      }
       
-      // Atualiza o pagamento na lista local
-      setPagamentos(pagamentos.map(p => 
-        p.id === id ? { ...p, ...updates } : p
-      ));
-
+      // Recarrega os dados para garantir consistência
+      await loadData();
       toast.success('Pagamento atualizado com sucesso!');
     } catch (error) {
       console.error('Erro ao atualizar pagamento:', error);
       toast.error('Erro ao atualizar pagamento. Verifique o console para mais detalhes.');
-      // Se houver erro, recarrega os dados para garantir consistência
+      // Se houver erro, recarrega os dados
       await loadData();
     }
   };
@@ -98,17 +102,17 @@ export default function PagamentosContratoPage() {
     try {
       console.log('Confirmando pagamento:', { pagamentoId, method });
       
-      // Primeiro atualiza a forma de pagamento
-      await PagamentosService.alterarFormaPagamento(pagamentoId, method);
+      // Usa o novo método que confirma pagamento em uma única chamada
+      await PagamentosService.confirmarPagamento(pagamentoId, method);
       
-      // Depois marca como pago
-      await PagamentosService.alterarStatus(pagamentoId, 'PAGO');
-      
-      toast.success('Pagamento confirmado com sucesso!');
+      // Recarrega os dados
       await loadData();
+      toast.success('Pagamento confirmado com sucesso!');
     } catch (error) {
       console.error('Erro ao confirmar pagamento:', error);
       toast.error('Erro ao confirmar pagamento');
+      // Se houver erro, recarrega os dados
+      await loadData();
     }
   };
 
@@ -231,7 +235,10 @@ export default function PagamentosContratoPage() {
                       <PaymentMethodSelect
                         value={row.formaPagamento as PaymentMethod}
                         onValueChange={(value) => handleUpdatePayment(row.id, { formaPagamento: value })}
-                        onConfirmPayment={(method) => handleConfirmPayment(row.id, method)}
+                        onConfirmPayment={(method) => {
+                          // Remove a chamada ao handleUpdatePayment quando confirmar o pagamento
+                          handleConfirmPayment(row.id, method);
+                        }}
                         disabled={row.status === 'PAGO'}
                       />
                     )}

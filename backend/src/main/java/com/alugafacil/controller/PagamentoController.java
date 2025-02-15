@@ -69,20 +69,24 @@ public class PagamentoController {
             Pagamento pagamento = pagamentoService.buscarPorId(id);
             log.info("Pagamento encontrado: {}", pagamento);
 
-            if (updates.containsKey("formaPagamento")) {
+            // Se houver forma de pagamento e status, atualiza ambos em uma única transação
+            if (updates.containsKey("formaPagamento") && updates.containsKey("status")) {
+                String formaPagamento = updates.get("formaPagamento");
+                String status = updates.get("status");
+                log.info("Atualizando forma de pagamento para: {} e status para: {}", formaPagamento, status);
+                pagamento = pagamentoService.confirmarPagamento(id, formaPagamento, status);
+            } 
+            // Se houver apenas forma de pagamento
+            else if (updates.containsKey("formaPagamento")) {
                 String formaPagamento = updates.get("formaPagamento");
                 log.info("Atualizando forma de pagamento para: {}", formaPagamento);
                 pagamento = pagamentoService.alterarFormaPagamento(id, formaPagamento);
             }
-
-            if (updates.containsKey("status")) {
+            // Se houver apenas status
+            else if (updates.containsKey("status")) {
                 String status = updates.get("status");
                 log.info("Atualizando status para: {}", status);
                 pagamento = pagamentoService.alterarStatus(id, status);
-            } else if (updates.containsKey("formaPagamento")) {
-                // Se atualizou a forma de pagamento mas não tem status, marca como PAGO
-                log.info("Marcando pagamento como PAGO pois atualizou forma de pagamento");
-                pagamento = pagamentoService.alterarStatus(id, "PAGO");
             }
 
             log.info("Pagamento atualizado com sucesso: {}", pagamento);

@@ -16,9 +16,9 @@ import { Button } from "@/components/ui";
 
 export const PAYMENT_METHODS = {
   PIX: 'PIX',
-  CARTAO: 'Cartão',
-  BOLETO: 'Boleto',
-  DINHEIRO: 'Dinheiro',
+  CARTAO: 'CARTAO',
+  BOLETO: 'BOLETO',
+  DINHEIRO: 'DINHEIRO',
 } as const;
 
 export type PaymentMethod = keyof typeof PAYMENT_METHODS;
@@ -46,7 +46,7 @@ export function PaymentMethodSelect({ value, onValueChange, onConfirmPayment, di
 
   const handleConfirm = () => {
     if (selectedMethod) {
-      onValueChange(selectedMethod);
+      // Remove a chamada ao onValueChange aqui, pois o onConfirmPayment já vai atualizar o estado
       if (onConfirmPayment) {
         onConfirmPayment(selectedMethod);
       }

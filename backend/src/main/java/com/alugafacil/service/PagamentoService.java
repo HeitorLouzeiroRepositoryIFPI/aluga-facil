@@ -145,6 +145,40 @@ public class PagamentoService {
         }
     }
     
+    @Transactional
+    public Pagamento confirmarPagamento(Long id, String formaPagamento, String status) {
+        try {
+            log.info("Confirmando pagamento {} com forma de pagamento {} e status {}", id, formaPagamento, status);
+            Pagamento pagamento = buscarPorId(id);
+            
+            // Atualiza a forma de pagamento
+            pagamento.setFormaPagamento(formaPagamento);
+            
+            // Se estiver marcando como pago, registra a data de pagamento e cria histórico
+            if ("PAGO".equals(status)) {
+                pagamento.setDataPagamento(LocalDate.now());
+                
+                // Criar histórico do pagamento
+                HistoricoPagamento historico = new HistoricoPagamento();
+                historico.setDataPagamento(LocalDate.now());
+                historico.setValor(pagamento.getValor());
+                historico.setFormaPagamento(formaPagamento);
+                historico.setPagamento(pagamento);
+                
+                historicoPagamentoService.criar(historico);
+                pagamento.setHistoricoPagamento(historico);
+            }
+            
+            // Atualiza o status
+            pagamento.setStatus(status);
+            
+            return salvar(pagamento);
+        } catch (Exception e) {
+            log.error("Erro ao confirmar pagamento: ", e);
+            throw new BusinessException("Erro ao confirmar pagamento: " + e.getMessage());
+        }
+    }
+
     private void validarPagamento(Pagamento pagamento) {
         if (pagamento.getValor() <= 0) {
             throw new BusinessException("Valor do pagamento deve ser maior que zero");
