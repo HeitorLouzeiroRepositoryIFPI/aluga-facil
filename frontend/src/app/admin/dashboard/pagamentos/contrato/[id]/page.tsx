@@ -136,20 +136,10 @@ export default function PagamentosContratoPage() {
                 </Button>
                 <h1 className="text-2xl font-bold">Detalhes do Contrato</h1>
               </div>
-              {detalhesContrato && (
-                <div className="mt-2 text-sm text-gray-600">
-                  <p>Imóvel: {detalhesContrato.imovelNome} ({detalhesContrato.imovelCodigo})</p>
-                  <p>Cliente: {detalhesContrato.clienteNome}</p>
-                </div>
-              )}
             </div>
-            <Button onClick={() => router.push(`/admin/dashboard/pagamentos/cadastrar?contratoId=${contratoId}`)}>
-              <FiPlus className="mr-2" />
-              Novo Pagamento
-            </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatsCard
               title="Total"
               value={stats.total}
