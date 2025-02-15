@@ -90,7 +90,7 @@ public class PagamentoService {
                 historico.setFormaPagamento(pagamento.getFormaPagamento());
                 historico.setPagamento(pagamento);
                 
-                historicoPagamentoService.salvar(historico);
+                historicoPagamentoService.criar(historico);
                 pagamento.setHistoricoPagamento(historico);
             }
             
@@ -118,41 +118,26 @@ public class PagamentoService {
     @Transactional
     public Pagamento atualizar(Long id, Pagamento pagamentoAtualizado) {
         try {
-            log.info("Atualizando pagamento: {}", pagamentoAtualizado);
-            Pagamento pagamento = buscarPorId(id);
+            log.info("Atualizando pagamento {}: {}", id, pagamentoAtualizado);
+            Pagamento pagamentoExistente = buscarPorId(id);
             
-            if (pagamentoAtualizado.getDataPagamento() != null) {
-                pagamento.setDataPagamento(pagamentoAtualizado.getDataPagamento());
-            }
-            if (pagamentoAtualizado.getValor() != null) {
-                pagamento.setValor(pagamentoAtualizado.getValor());
-            }
-            if (pagamentoAtualizado.getStatus() != null) {
-                pagamento.setStatus(pagamentoAtualizado.getStatus());
-            }
-            if (pagamentoAtualizado.getFormaPagamento() != null) {
-                pagamento.setFormaPagamento(pagamentoAtualizado.getFormaPagamento());
-            }
-            if (pagamentoAtualizado.getObservacoes() != null) {
-                pagamento.setObservacoes(pagamentoAtualizado.getObservacoes());
-            }
+            pagamentoExistente.setValor(pagamentoAtualizado.getValor());
+            pagamentoExistente.setDataVencimento(pagamentoAtualizado.getDataVencimento());
+            pagamentoExistente.setStatus(pagamentoAtualizado.getStatus());
+            pagamentoExistente.setFormaPagamento(pagamentoAtualizado.getFormaPagamento());
             
-            validarPagamento(pagamento);
-            return salvar(pagamento);
+            return salvar(pagamentoExistente);
         } catch (Exception e) {
             log.error("Erro ao atualizar pagamento: ", e);
             throw new BusinessException("Erro ao atualizar pagamento: " + e.getMessage());
         }
     }
-    
+
     @Transactional
     public void excluir(Long id) {
         try {
             log.info("Excluindo pagamento: {}", id);
             Pagamento pagamento = buscarPorId(id);
-            if (pagamento.getHistoricoPagamento() != null) {
-                throw new BusinessException("Não é possível excluir um pagamento já realizado");
-            }
             pagamentoRepository.delete(pagamento);
         } catch (Exception e) {
             log.error("Erro ao excluir pagamento: ", e);
