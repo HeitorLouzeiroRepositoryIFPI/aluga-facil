@@ -3,8 +3,25 @@
 import { ProtectedRoute } from "@/components/protected-route";
 import DashboardLayout from "@/app/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { formatCurrency } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 export default function AdminDashboard() {
+  const { data, isLoading } = useDashboardData();
+
+  if (isLoading) {
+    return (
+      <ProtectedRoute allowedTypes={['admin']}>
+        <DashboardLayout>
+          <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+            <Loader2 className="w-8 h-8 animate-spin" />
+          </div>
+        </DashboardLayout>
+      </ProtectedRoute>
+    );
+  }
+
   return (
     <ProtectedRoute allowedTypes={['admin']}>
       <DashboardLayout>
@@ -14,18 +31,10 @@ export default function AdminDashboard() {
               <CardTitle>Imóveis Cadastrados</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">42</p>
-              <p className="text-sm text-muted-foreground">Total de imóveis no sistema</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Contratos Ativos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">28</p>
-              <p className="text-sm text-muted-foreground">Aluguéis em andamento</p>
+              <p className="text-2xl font-bold">{data?.imoveis.total}</p>
+              <p className="text-sm text-muted-foreground">
+                {data?.imoveis.ativos} imóveis disponíveis
+              </p>
             </CardContent>
           </Card>
 
@@ -34,32 +43,87 @@ export default function AdminDashboard() {
               <CardTitle>Pagamentos Pendentes</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">R$ 15.750,00</p>
-              <p className="text-sm text-muted-foreground">Aluguéis a receber</p>
+              <p className="text-2xl font-bold text-yellow-600">
+                {formatCurrency(data?.pagamentos.pendentes.valor || 0)}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {data?.pagamentos.pendentes.quantidade} pagamentos pendentes
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Pagamentos Atrasados</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-red-600">
+                {formatCurrency(data?.pagamentos.atrasados.valor || 0)}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {data?.pagamentos.atrasados.quantidade} pagamentos atrasados
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        <Card className="mt-8">
+        <div className="grid gap-4 md:grid-cols-2 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pagamentos Recebidos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-green-600">
+                {formatCurrency(data?.pagamentos.recebidos.valor || 0)}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {data?.pagamentos.recebidos.quantidade} pagamentos recebidos
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Total a Receber</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">
+                {formatCurrency(
+                  (data?.pagamentos.pendentes.valor || 0) +
+                    (data?.pagamentos.atrasados.valor || 0)
+                )}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {(data?.pagamentos.pendentes.quantidade || 0) +
+                  (data?.pagamentos.atrasados.quantidade || 0)}{" "}
+                pagamentos pendentes/atrasados
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="mt-4">
           <CardHeader>
             <CardTitle>Atividades Recentes</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="font-medium">Novo Contrato</p>
-                  <p className="text-sm text-muted-foreground">Apartamento 302 - Residencial Aurora</p>
+              {data?.atividadesRecentes.map((atividade, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center border-b pb-4"
+                >
+                  <div>
+                    <p className="font-medium">{atividade.tipo}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {atividade.imovel.nome} - {atividade.descricao}
+                    </p>
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    {atividade.data}
+                  </span>
                 </div>
-                <span className="text-sm text-muted-foreground">Há 2 horas</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="font-medium">Pagamento Recebido</p>
-                  <p className="text-sm text-muted-foreground">Casa 123 - Jardim das Flores</p>
-                </div>
-                <span className="text-sm text-muted-foreground">Ontem</span>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>
