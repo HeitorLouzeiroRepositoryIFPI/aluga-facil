@@ -6,9 +6,6 @@ import jakarta.validation.constraints.Positive;
 
 import lombok.Data;
 
-
-import java.util.List;
-
 @Data
 public class ImovelDTO {
     private Long id;
@@ -23,8 +20,8 @@ public class ImovelDTO {
     @NotBlank(message = "Descrição é obrigatória")
     private String descricao;
     
-    @NotNull(message = "Valor mensal é obrigatório")
-    @Positive(message = "Valor mensal deve ser positivo")
+    @NotNull(message = "O valor mensal é obrigatório")
+    @Positive(message = "O valor mensal deve ser maior ou igual a zero")
     private Double valorMensal;
     
     private String status;
@@ -32,6 +29,5 @@ public class ImovelDTO {
     @NotBlank(message = "Tipo é obrigatório")
     private String tipo;
     
-    private List<String> fotos;
     private Long administradorId;
 }

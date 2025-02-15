@@ -9,13 +9,11 @@ export interface ContratoDTO {
   dataInicio: string;
   dataFim: string;
   valorMensal: number;
+  valorDeposito: number;
   status: 'ATIVO' | 'FINALIZADO' | 'CANCELADO';
   observacoes?: string;
   cliente?: ClienteDTO;
   imovel?: Imovel;
-  diaPagamento: number;
-  taxaAdministracao: number;
-  valorDeposito: number;
 }
 
 export class ContratosService {

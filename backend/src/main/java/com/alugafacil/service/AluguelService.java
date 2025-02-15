@@ -96,7 +96,7 @@ public class AluguelService {
             for (int i = 0; i < meses; i++) {
                 LocalDate dataPagamento = aluguel.getDataInicio()
                     .plusMonths(i)
-                    .withDayOfMonth(aluguel.getDiaPagamento());
+                    .withDayOfMonth(1); // Pagamento sempre no dia 1
                 
                 Pagamento pagamento = Pagamento.builder()
                     .aluguel(aluguel)

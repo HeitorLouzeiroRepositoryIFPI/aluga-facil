@@ -57,8 +57,6 @@ export default function NovoContratoPage() {
     dataInicio: format(new Date(), "yyyy-MM-dd"),
     dataFim: format(new Date(new Date().setFullYear(new Date().getFullYear() + 1)), "yyyy-MM-dd"),
     valorMensal: 0,
-    diaPagamento: 5,
-    taxaAdministracao: 10,
     valorDeposito: 0,
     observacoes: ""
   });
@@ -69,7 +67,8 @@ export default function NovoContratoPage() {
       setFormData(prev => ({
         ...prev,
         imovelId: Number(imovelId),
-        valorMensal: imovel.valorMensal
+        valorMensal: imovel.valorMensal,
+        valorDeposito: imovel.valorMensal * 2 // Sugestão: depósito = 2x valor mensal
       }));
     }
   };
@@ -78,7 +77,7 @@ export default function NovoContratoPage() {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === "valorMensal" || name === "taxaAdministracao" || name === "valorDeposito" || name === "diaPagamento"
+      [name]: name === "valorMensal" || name === "valorDeposito"
         ? Number(value)
         : value
     }));
@@ -246,21 +245,6 @@ export default function NovoContratoPage() {
                   />
                 </div>
 
-                {/* Taxa de Administração */}
-                <div>
-                  <Label htmlFor="taxaAdministracao">Taxa de Administração (%)</Label>
-                  <Input
-                    type="number"
-                    id="taxaAdministracao"
-                    name="taxaAdministracao"
-                    value={formData.taxaAdministracao}
-                    onChange={handleInputChange}
-                    required
-                    min="0"
-                    max="100"
-                  />
-                </div>
-
                 {/* Valor do Depósito */}
                 <div>
                   <Label htmlFor="valorDeposito">Valor do Depósito (R$)</Label>
@@ -276,32 +260,17 @@ export default function NovoContratoPage() {
                   />
                 </div>
 
-                {/* Dia do Pagamento */}
+                {/* Observações */}
                 <div>
-                  <Label htmlFor="diaPagamento">Dia do Pagamento</Label>
-                  <Input
-                    type="number"
-                    id="diaPagamento"
-                    name="diaPagamento"
-                    value={formData.diaPagamento}
+                  <Label htmlFor="observacoes">Observações</Label>
+                  <Textarea
+                    id="observacoes"
+                    name="observacoes"
+                    value={formData.observacoes}
                     onChange={handleInputChange}
-                    required
-                    min="1"
-                    max="31"
+                    rows={4}
                   />
                 </div>
-              </div>
-
-              {/* Observações */}
-              <div>
-                <Label htmlFor="observacoes">Observações</Label>
-                <Textarea
-                  id="observacoes"
-                  name="observacoes"
-                  value={formData.observacoes}
-                  onChange={handleInputChange}
-                  rows={4}
-                />
               </div>
 
               {/* Botões */}

@@ -24,7 +24,7 @@ public class Pagamento {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(nullable = false)
+    @Column
     private LocalDate dataPagamento;
     
     @Column(nullable = false)
@@ -62,7 +62,7 @@ public class Pagamento {
         log.info("Atualizando status do pagamento {}: Data pagamento: {}, Hoje: {}", 
                 this.id, this.dataPagamento, hoje);
         
-        if (this.dataPagamento.isBefore(hoje)) {
+        if (this.dataPagamento != null && this.dataPagamento.isBefore(hoje)) {
             log.info("Pagamento {} está atrasado", this.id);
             this.status = "ATRASADO";
         } else {

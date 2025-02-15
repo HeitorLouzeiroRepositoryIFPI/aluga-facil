@@ -31,7 +31,6 @@ public class ImovelController {
         imovel.setDescricao(dto.getDescricao());
         imovel.setValorMensal(dto.getValorMensal());
         imovel.setTipo(dto.getTipo());
-        imovel.setFotos(dto.getFotos());
         imovel.setStatus("DISPONIVEL");
         
         Imovel novoImovel = imovelService.cadastrar(imovel, dto.getAdministradorId());
@@ -114,7 +113,6 @@ public class ImovelController {
         imovelExistente.setValorMensal(dto.getValorMensal());
         imovelExistente.setTipo(dto.getTipo());
         imovelExistente.setStatus(dto.getStatus());
-        imovelExistente.setFotos(dto.getFotos());
         
         Imovel imovelAtualizado = imovelService.atualizarPorCodigo(codigo, imovelExistente);
         return ResponseEntity.ok(ImovelResponseDTO.fromEntity(imovelAtualizado));

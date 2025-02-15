@@ -19,13 +19,13 @@ export interface Imovel {
   id: number;
   codigo: string;
   nome: string;
+  tipo: string;
   endereco: string;
   descricao: string;
   valorMensal: number;
-  tipo: string;
-  fotos: string[];
-  status: 'DISPONIVEL' | 'ALUGADO';
-  proprietarioId: number;
+  status: string;
+  administrador?: Administrador;
+  alugueis?: Aluguel[];
 }
 
 export interface ImovelDTO {

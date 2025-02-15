@@ -18,7 +18,6 @@ import { Label } from "@/components/ui/label";
 interface Pagamento {
   id: number;
   valor: number;
-  dataVencimento: string;
   dataPagamento?: string;
   status: string;
   aluguel: {
@@ -159,15 +158,9 @@ export default function PagamentoPage() {
                 <p className="text-muted-foreground">{pagamento.aluguel.imovel.endereco}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Valor</p>
-                  <p className="text-2xl font-bold">{formatCurrency(pagamento.valor)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Vencimento</p>
-                  <p className="text-lg">{formatarData(pagamento.dataVencimento)}</p>
-                </div>
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">Valor a Pagar</p>
+                <p className="text-3xl font-bold">{formatCurrency(pagamento.valor)}</p>
               </div>
 
               <div className="pt-6 border-t">

@@ -45,18 +45,13 @@ public class Imovel {
     @Column(nullable = false)
     private String status;
     
-    @ElementCollection
-    @CollectionTable(name = "imovel_fotos", joinColumns = @JoinColumn(name = "imovel_id"))
-    @Column(name = "url")
-    private List<String> fotos = new ArrayList<>();
-    
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "administrador_id", nullable = false)
     @JsonIgnoreProperties({"imoveis", "senha"})
     @JsonBackReference
     private Administrador administrador;
     
     @OneToMany(mappedBy = "imovel", fetch = FetchType.LAZY)
-    @JsonIgnoreProperties({"imovel", "pagamentos", "valorMensal", "taxaAdministracao", "valorDeposito", "diaPagamento", "observacoes"})
+    @JsonIgnoreProperties({"imovel", "pagamentos", "valorMensal", "valorDeposito", "observacoes"})
     private List<Aluguel> alugueis = new ArrayList<>();
 }

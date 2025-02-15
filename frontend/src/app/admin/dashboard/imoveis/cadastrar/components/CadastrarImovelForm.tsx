@@ -28,101 +28,56 @@ import {
 import { ImoveisService, ImovelDTO } from "@/services/imoveis";
 import { useAuth } from "@/contexts/AuthContext";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-
 const formSchema = z.object({
   nome: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
-  descricao: z.string().min(10, "A descrição deve ter pelo menos 10 caracteres"),
-  tipo: z.enum(["CASA", "APARTAMENTO", "COMERCIAL", "TERRENO", "SALA_COMERCIAL"]),
+  tipo: z.string().min(1, "Selecione o tipo do imóvel"),
   endereco: z.string().min(5, "O endereço deve ter pelo menos 5 caracteres"),
-  valorMensal: z.string().transform((val) => parseFloat(val)),
-  fotos: z
-    .array(
-      z.object({
-        file: z
-          .instanceof(File)
-          .refine((file) => file.size <= MAX_FILE_SIZE, "O tamanho máximo do arquivo é 5MB.")
-          .refine(
-            (file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
-            "Apenas .jpg, .jpeg, .png e .webp são suportados."
-          ),
-        preview: z.string(),
-      })
-    )
-    .min(1, "Adicione pelo menos uma foto do imóvel"),
+  descricao: z.string().min(10, "A descrição deve ter pelo menos 10 caracteres"),
+  valorMensal: z.coerce.number().min(1, "O valor mensal deve ser maior que zero"),
 });
+
+type FormData = z.infer<typeof formSchema>;
 
 export default function CadastrarImovelForm() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
   const { user, userType } = useAuth();
 
   if (!user || userType !== 'admin') {
     router.push('/login');
     return null;
   }
-  const [fotos, setFotos] = useState<Array<{ file: File; preview: string }>>([]);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       nome: "",
-      descricao: "",
-      tipo: "CASA",
+      tipo: "",
       endereco: "",
-      valorMensal: "",
-      status: "DISPONIVEL",
-      fotos: [],
+      descricao: "",
+      valorMensal: 0,
     },
   });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const newFotos = files.map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-    }));
-
-    setFotos([...fotos, ...newFotos]);
-    form.setValue("fotos", [...fotos, ...newFotos]);
-  };
-
-  const handleRemoveFoto = (index: number) => {
-    const newFotos = fotos.filter((_, i) => i !== index);
-    setFotos(newFotos);
-    form.setValue("fotos", newFotos);
-  };
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-
-
-    setLoading(true);
+  const onSubmit = async (values: FormData) => {
     try {
       const imovelData: ImovelDTO = {
         nome: values.nome,
         endereco: values.endereco,
         descricao: values.descricao,
-        valorMensal: parseFloat(values.valorMensal.toString()),
+        valorMensal: values.valorMensal,
         tipo: values.tipo,
-        fotos: [], // Será preenchido pelo serviço de upload
         administradorId: user.id,
       };
 
-      // Extrai os arquivos das fotos
-      const fotosFiles = values.fotos.map(({ file }) => file);
+      await ImoveisService.cadastrar(imovelData);
 
-      // Cadastra o imóvel com as fotos
-      await ImoveisService.cadastrar(imovelData, fotosFiles);
       toast.success("Imóvel cadastrado com sucesso!");
       router.push("/admin/dashboard/imoveis");
     } catch (error) {
       toast.error("Erro ao cadastrar imóvel");
       console.error(error);
-    } finally {
-      setLoading(false);
     }
-  }
+  };
 
   return (
     <FormProvider {...form}>
@@ -133,10 +88,13 @@ export default function CadastrarImovelForm() {
             name="nome"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nome</FormLabel>
+                <FormLabel>Nome do Imóvel</FormLabel>
                 <FormControl>
-                  <Input placeholder="Digite o nome do imóvel" {...field} />
+                  <Input placeholder="Ex: Casa na Praia" {...field} />
                 </FormControl>
+                <FormDescription>
+                  Digite um nome que identifique o imóvel.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -157,33 +115,17 @@ export default function CadastrarImovelForm() {
                   <SelectContent>
                     <SelectItem value="CASA">Casa</SelectItem>
                     <SelectItem value="APARTAMENTO">Apartamento</SelectItem>
-                    <SelectItem value="COMERCIAL">Comércial</SelectItem>
-                    <SelectItem value="TERRENO">Terreno</SelectItem>
+                    <SelectItem value="KITNET">Kitnet</SelectItem>
                     <SelectItem value="SALA_COMERCIAL">Sala Comercial</SelectItem>
+                    <SelectItem value="LOJA">Loja</SelectItem>
+                    <SelectItem value="GALPAO">Galpão</SelectItem>
+                    <SelectItem value="TERRENO">Terreno</SelectItem>
+                    <SelectItem value="OUTROS">Outros</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="valorMensal"
-            render={({ field }) => (
-              <FormItem className="col-span-2">
-                <FormLabel>Valor Mensal (R$)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="Digite o valor mensal"
-                    step="0.01"
-                    min="0"
-                    {...field}
-                  />
-                </FormControl>
+                <FormDescription>
+                  Selecione o tipo do imóvel.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -196,8 +138,11 @@ export default function CadastrarImovelForm() {
               <FormItem className="col-span-2">
                 <FormLabel>Endereço</FormLabel>
                 <FormControl>
-                  <Input placeholder="Digite o endereço completo" {...field} />
+                  <Input placeholder="Ex: Rua das Flores, 123" {...field} />
                 </FormControl>
+                <FormDescription>
+                  Digite o endereço completo do imóvel.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -211,59 +156,39 @@ export default function CadastrarImovelForm() {
                 <FormLabel>Descrição</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Descreva o imóvel detalhadamente"
+                    placeholder="Ex: Casa com 3 quartos, 2 banheiros..."
                     className="min-h-[100px]"
                     {...field}
                   />
                 </FormControl>
+                <FormDescription>
+                  Descreva as características do imóvel.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <div className="col-span-2">
-            <FormField
-              control={form.control}
-              name="fotos"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Fotos do Imóvel</FormLabel>
-                  <FormControl>
-                    <div className="space-y-4">
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handleFileChange}
-                      />
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-                        {fotos.map((foto, index) => (
-                          <div key={index} className="relative">
-                            <img
-                              src={foto.preview}
-                              alt={`Foto ${index + 1}`}
-                              className="w-full h-40 object-cover rounded-lg"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveFoto(index)}
-                              className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
-                            >
-                              X
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Adicione fotos do imóvel. Formatos aceitos: JPG, PNG, WEBP. Tamanho máximo: 5MB por foto.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="valorMensal"
+            render={({ field }) => (
+              <FormItem className="col-span-2">
+                <FormLabel>Valor Mensal</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="Ex: 1000"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Digite o valor mensal do aluguel.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="flex justify-end space-x-4">
@@ -271,13 +196,10 @@ export default function CadastrarImovelForm() {
             type="button"
             variant="outline"
             onClick={() => router.back()}
-            disabled={loading}
           >
             Cancelar
           </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? "Cadastrando..." : "Cadastrar Imóvel"}
-          </Button>
+          <Button type="submit">Cadastrar Imóvel</Button>
         </div>
       </form>
     </FormProvider>

@@ -102,9 +102,6 @@ public class ImovelService {
         if (!imovel.getAlugueis().isEmpty()) {
             throw new BusinessException("Não é possível excluir um imóvel que possui aluguéis");
         }
-        // Limpa a lista de fotos antes de excluir o imóvel
-        imovel.getFotos().clear();
-        imovelRepository.save(imovel);
         imovelRepository.delete(imovel);
     }
 }

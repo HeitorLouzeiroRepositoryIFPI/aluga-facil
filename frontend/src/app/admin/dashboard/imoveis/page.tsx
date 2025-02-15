@@ -16,7 +16,6 @@ import { StatsCard } from "@/components/stats-card/StatsCard";
 import { SearchFilterBar } from "@/components/search-filter/SearchFilterBar";
 import { ActionButtons } from "@/components/action-buttons/ActionButtons";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
 
 export default function ImoveisPage() {
   const router = useRouter();
@@ -147,20 +146,10 @@ export default function ImoveisPage() {
               {
                 header: "Imóvel",
                 accessor: (row) => (
-                  <div className="flex items-center space-x-4">
-                    {row.fotos && row.fotos.length > 0 && (
-                      <div className="flex-shrink-0 w-12 h-12 relative">
-                        <Image
-                          src={row.fotos[0]}
-                          alt={row.nome}
-                          fill
-                          className="rounded-lg object-cover"
-                        />
-                      </div>
-                    )}
+                  <div className="flex items-center gap-4">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{row.nome}</div>
-                      <div className="text-sm text-gray-500">{row.endereco}</div>
+                      <p className="font-medium">{row.nome}</p>
+                      <p className="text-sm text-muted-foreground">{row.endereco}</p>
                     </div>
                   </div>
                 )

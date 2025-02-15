@@ -34,9 +34,7 @@ public class AluguelController {
                 .dataInicio(dto.getDataInicio())
                 .dataFim(dto.getDataFim())
                 .valorMensal(dto.getValorMensal())
-                .taxaAdministracao(dto.getTaxaAdministracao())
                 .valorDeposito(dto.getValorDeposito())
-                .diaPagamento(dto.getDiaPagamento())
                 .observacoes(dto.getObservacoes())
                 .status("ATIVO")
                 .build();

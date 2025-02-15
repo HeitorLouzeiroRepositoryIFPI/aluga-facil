@@ -1,7 +1,9 @@
 import api from '@/services/api';
+
 export interface Administrador {
   id: number;
   nome: string;
+  email: string;
 }
 
 export interface Imovel {
@@ -13,7 +15,6 @@ export interface Imovel {
   valorMensal: number;
   status: string;
   tipo: string;
-  fotos: string[];
   administrador: Administrador;
 }
 
@@ -23,7 +24,6 @@ export interface ImovelDTO {
   descricao: string;
   valorMensal: number;
   tipo: string;
-  fotos: string[];
   administradorId: number;
 }
 
@@ -54,8 +54,7 @@ const normalizeImovel = (data: any): Imovel => {
     valorMensal: data.valorMensal || 0,
     status: data.status || 'DISPONIVEL',
     tipo: data.tipo || '',
-    fotos: ensureArray(data.fotos),
-    administrador: data.administrador || { id: 0, nome: '' }
+    administrador: data.administrador || { id: 0, nome: '', email: '' }
   };
 
   console.log('Imóvel normalizado:', imovel);
@@ -71,8 +70,7 @@ const getDefaultImovel = (): Imovel => ({
   valorMensal: 0,
   status: 'INDEFINIDO',
   tipo: 'Não especificado',
-  fotos: [],
-  administrador: { id: 0, nome: 'Não informado' }
+  administrador: { id: 0, nome: 'Não informado', email: '' }
 });
 
 export const ImoveisService = {
@@ -82,32 +80,11 @@ export const ImoveisService = {
   },
 
   async atualizar(codigo: string, imovel: ImovelDTO): Promise<ImovelDTO> {
-    const response = await api.put(`/imoveis/${codigo}`, imovel);
-    return response.data;
-  },
-
-  async atualizarComFotos(codigo: string, imovel: ImovelDTO, fotos: File[]): Promise<ImovelDTO> {
-    // Primeiro faz upload das fotos
-    const fotosUrls = await Promise.all(
-      fotos.map(async (foto) => {
-        const formData = new FormData();
-        formData.append('file', foto);
-        const response = await api.post('/upload', formData);
-        return response.data.url;
-      })
-    );
-
-    // Atualiza o imóvel com as novas fotos
-    const imovelComFotos = {
-      ...imovel,
-      fotos: [...imovel.fotos, ...fotosUrls],
+    const { data } = await api.put(`/imoveis/${codigo}`, imovel);
+    return {
+      ...data,
+      status: data.status || 'DISPONIVEL',
     };
-
-    return await ImoveisService.atualizar(codigo, imovelComFotos);
-  },
-
-  async removerFoto(codigo: string, url: string): Promise<void> {
-    await api.delete(`/imoveis/${codigo}/fotos`, { data: { url } });
   },
 
   async excluir(codigo: string): Promise<void> {
@@ -231,19 +208,8 @@ export const ImoveisService = {
     }
   },
 
-  cadastrar: async (imovel: ImovelDTO, fotos?: File[]) => {
+  cadastrar: async (imovel: ImovelDTO) => {
     try {
-      // Se houver fotos, faz o upload primeiro
-      if (fotos && fotos.length > 0) {
-        console.log('Iniciando upload de fotos...');
-        const uploadResults = await UploadService.uploadMultiplasFotos(fotos);
-        const fotosUrls = uploadResults
-          .filter((result) => result.success)
-          .map((result) => result.url);
-        console.log('URLs das fotos após upload:', fotosUrls);
-        imovel.fotos = fotosUrls;
-      }
-
       const response = await api.post<any>('/imoveis', imovel);
       console.log('Response from cadastrar:', response.data);
       return normalizeImovel(response.data);
@@ -267,11 +233,6 @@ export const ImoveisService = {
   atualizarStatus: async (id: number, status: string) => {
     console.log('Atualizando status de imóvel com id', id, 'para', status);
     await api.patch(`/imoveis/${id}/status?status=${status}`);
-  },
-
-  excluir: async (codigo: string) => {
-    console.log('Excluindo imóvel com código', codigo);
-    await api.delete(`/imoveis/${codigo}`);
   },
 
   async listarDisponiveis(): Promise<Imovel[]> {

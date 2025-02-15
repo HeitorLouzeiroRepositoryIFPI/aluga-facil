@@ -17,9 +17,7 @@ interface Contrato {
   dataInicio: string;
   dataFim: string;
   valorMensal: number;
-  taxaAdministracao: number;
   valorDeposito: number;
-  diaPagamento: number;
   observacoes: string;
   status: string;
   imovel: {
@@ -38,8 +36,8 @@ interface Contrato {
   pagamentos: Array<{
     id: number;
     valor: number;
-    dataVencimento: string;
     dataPagamento?: string;
+    formaPagamento?: string;
     status: string;
   }>;
 }
@@ -147,22 +145,18 @@ export default function ContratoPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="flex items-center gap-2">
                   <Home className="w-4 h-4 text-muted-foreground" />
                   <span>Tipo: {contrato.imovel.tipo}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Dia Pagto:</span>
-                  <span>{contrato.diaPagamento}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Taxa Adm:</span>
-                  <span>{formatCurrency(contrato.taxaAdministracao)}</span>
-                </div>
-                <div className="flex items-center gap-2">
                   <span className="text-muted-foreground">Valor Mensal:</span>
                   <span>{formatCurrency(contrato.valorMensal)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Valor Depósito:</span>
+                  <span>{formatCurrency(contrato.valorDeposito)}</span>
                 </div>
               </div>
 
@@ -190,12 +184,14 @@ export default function ContratoPage() {
                     >
                       <div className="space-y-1">
                         <p className="font-medium">{formatCurrency(pagamento.valor)}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Vencimento: {formatarData(pagamento.dataVencimento)}
-                        </p>
                         {pagamento.dataPagamento && (
                           <p className="text-sm text-muted-foreground">
                             Conta/Mês: {formatarData(pagamento.dataPagamento)}
+                          </p>
+                        )}
+                        {pagamento.formaPagamento && (
+                          <p className="text-sm text-muted-foreground">
+                            Forma de Pagamento: {pagamento.formaPagamento}
                           </p>
                         )}
                       </div>

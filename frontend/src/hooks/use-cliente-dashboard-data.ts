@@ -27,7 +27,6 @@ interface Imovel {
   descricao: string;
   valorMensal: number;
   status: string;
-  fotos: string[];
   administrador?: Administrador;
   alugueis?: Aluguel[];
 }

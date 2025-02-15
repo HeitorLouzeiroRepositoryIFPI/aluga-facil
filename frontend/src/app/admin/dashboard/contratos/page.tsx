@@ -140,8 +140,7 @@ export default function ContratosPage() {
               { value: 'TODOS', label: 'Todos' },
               { value: 'ATIVO', label: 'Ativo' },
               { value: 'FINALIZADO', label: 'Finalizado' },
-              { value: 'CANCELADO', label: 'Cancelado' },
-              { value: 'RENOVADO', label: 'Renovado' }
+              { value: 'CANCELADO', label: 'Cancelado' }
             ]}
           />
 
@@ -179,6 +178,12 @@ export default function ContratosPage() {
                 )
               },
               {
+                header: "Valor Depósito",
+                accessor: (row) => (
+                  <div className="font-medium">{formatarValor(row.valorDeposito)}</div>
+                )
+              },
+              {
                 header: "Status",
                 accessor: (row) => (
                   <StatusBadge
@@ -186,8 +191,7 @@ export default function ContratosPage() {
                     statusMap={{
                       'ATIVO': { label: 'Ativo', color: 'success' },
                       'FINALIZADO': { label: 'Finalizado', color: 'default' },
-                      'CANCELADO': { label: 'Cancelado', color: 'danger' },
-                      'RENOVADO': { label: 'Renovado', color: 'info' }
+                      'CANCELADO': { label: 'Cancelado', color: 'danger' }
                     }}
                     onStatusChange={(newStatus) => handleStatusChange(row.id!, newStatus)}
                   />
