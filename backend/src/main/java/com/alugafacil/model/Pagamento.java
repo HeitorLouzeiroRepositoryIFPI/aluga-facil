@@ -30,9 +30,6 @@ public class Pagamento {
     private LocalDate dataPagamento;
     
     @Column(nullable = false)
-    private LocalDate dataVencimento;
-    
-    @Column(nullable = false)
     private Double valor;
     
     @Column(nullable = false)
