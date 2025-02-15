@@ -100,6 +100,47 @@ public class AluguelController {
         }
     }
     
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> atualizar(@PathVariable Long id, @Valid @RequestBody AluguelDTO dto) {
+        try {
+            log.info("Recebendo requisição para atualizar aluguel {}: {}", id, dto);
+            
+            Aluguel aluguel = aluguelService.buscarPorId(id);
+            
+            // Atualizar campos
+            aluguel.setDataInicio(dto.getDataInicio());
+            aluguel.setDataFim(dto.getDataFim());
+            aluguel.setValorMensal(dto.getValorMensal());
+            aluguel.setValorDeposito(dto.getValorDeposito());
+            aluguel.setObservacoes(dto.getObservacoes());
+            if (dto.getStatus() != null) {
+                aluguel.setStatus(dto.getStatus());
+            }
+            
+            // Atualizar relacionamentos se fornecidos
+            if (dto.getClienteId() != null) {
+                aluguelService.atualizarCliente(aluguel, dto.getClienteId());
+            }
+            if (dto.getImovelId() != null) {
+                aluguelService.atualizarImovel(aluguel, dto.getImovelId());
+            }
+            
+            Aluguel aluguelAtualizado = aluguelService.atualizar(aluguel);
+            log.info("Aluguel atualizado com sucesso: {}", aluguelAtualizado);
+            
+            return ResponseEntity.ok(aluguelAtualizado);
+            
+        } catch (BusinessException e) {
+            log.error("Erro de negócio ao atualizar aluguel: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                .body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Erro inesperado ao atualizar aluguel", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("message", "Erro interno ao atualizar aluguel: " + e.getMessage()));
+        }
+    }
+    
     @PatchMapping("/{id}/status")
     public ResponseEntity<Void> atualizarStatus(@PathVariable Long id, @RequestParam String status) {
         aluguelService.atualizarStatus(id, status);

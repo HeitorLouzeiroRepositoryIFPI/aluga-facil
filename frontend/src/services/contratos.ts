@@ -23,8 +23,25 @@ export class ContratosService {
   }
 
   static async buscarPorId(id: number): Promise<ContratoDTO> {
-    const response = await api.get(`/alugueis/${id}`);
-    return response.data;
+    try {
+      console.log('Buscando contrato por ID:', id);
+      const response = await api.get(`/alugueis/${id}`);
+      const contrato = response.data;
+      
+      // Garantir que os IDs estejam definidos
+      if (contrato.cliente && !contrato.clienteId) {
+        contrato.clienteId = contrato.cliente.id;
+      }
+      if (contrato.imovel && !contrato.imovelId) {
+        contrato.imovelId = contrato.imovel.id;
+      }
+
+      console.log('Contrato recebido da API:', contrato);
+      return contrato;
+    } catch (error) {
+      console.error('Erro ao buscar contrato:', error);
+      throw error;
+    }
   }
 
   static async criar(contrato: ContratoDTO): Promise<ContratoDTO> {
@@ -40,8 +57,19 @@ export class ContratosService {
   }
 
   static async atualizar(id: number, contrato: Partial<ContratoDTO>): Promise<ContratoDTO> {
-    const response = await api.put(`/alugueis/${id}`, contrato);
-    return response.data;
+    try {
+      console.log('Atualizando contrato:', { id, dados: contrato });
+      const response = await api.patch(`/alugueis/${id}`, contrato);
+      console.log('Resposta da atualização:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Erro ao atualizar contrato:', {
+        error,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      throw new Error(error.response?.data?.message || 'Erro ao atualizar contrato');
+    }
   }
 
   static async excluir(id: number): Promise<void> {

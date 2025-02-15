@@ -148,6 +148,58 @@ public class AluguelService {
     }
     
     @Transactional
+    public Aluguel atualizar(Aluguel aluguel) {
+        try {
+            log.info("Atualizando aluguel: {}", aluguel);
+            return aluguelRepository.save(aluguel);
+        } catch (Exception e) {
+            log.error("Erro ao atualizar aluguel: {}", e.getMessage(), e);
+            throw new BusinessException("Erro ao atualizar aluguel: " + e.getMessage());
+        }
+    }
+
+    @Transactional
+    public void atualizarCliente(Aluguel aluguel, Long clienteId) {
+        try {
+            log.info("Atualizando cliente do aluguel {} para {}", aluguel.getId(), clienteId);
+            Cliente cliente = clienteService.buscarPorId(clienteId);
+            aluguel.setCliente(cliente);
+        } catch (Exception e) {
+            log.error("Erro ao atualizar cliente do aluguel: {}", e.getMessage(), e);
+            throw new BusinessException("Erro ao atualizar cliente do aluguel: " + e.getMessage());
+        }
+    }
+
+    @Transactional
+    public void atualizarImovel(Aluguel aluguel, Long imovelId) {
+        try {
+            log.info("Atualizando imóvel do aluguel {} para {}", aluguel.getId(), imovelId);
+            
+            // Se o imóvel não mudou, não precisa fazer nada
+            if (aluguel.getImovel() != null && aluguel.getImovel().getId().equals(imovelId)) {
+                log.info("Imóvel não foi alterado, mantendo o mesmo");
+                return;
+            }
+            
+            Imovel imovel = imovelService.buscarPorId(imovelId);
+            
+            // Verificar disponibilidade do novo imóvel
+            if (!verificarDisponibilidade(imovelId, aluguel.getDataInicio(), aluguel.getDataFim())) {
+                throw new BusinessException("Novo imóvel não está disponível no período selecionado");
+            }
+            
+            aluguel.setImovel(imovel);
+            aluguel.setValorMensal(imovel.getValorMensal());
+            aluguel.setValorDeposito(imovel.getValorMensal() * 2);
+            
+            log.info("Imóvel atualizado com sucesso. Novo valor mensal: {}", imovel.getValorMensal());
+        } catch (Exception e) {
+            log.error("Erro ao atualizar imóvel do aluguel: {}", e.getMessage(), e);
+            throw new BusinessException("Erro ao atualizar imóvel do aluguel: " + e.getMessage());
+        }
+    }
+    
+    @Transactional
     public void excluir(Long id) {
         try {
             log.info("Iniciando exclusão do aluguel: {}", id);
