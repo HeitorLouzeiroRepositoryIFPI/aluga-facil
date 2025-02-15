@@ -53,7 +53,7 @@ public class Aluguel {
     
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "imovel_id", nullable = false)
-    @JsonIgnoreProperties({"alugueis", "administrador", "descricao", "fotos", "status", "valorMensal", "tipo", "endereco"})
+    @JsonIgnoreProperties({"alugueis", "administrador", "descricao", "fotos", "status", "valorMensal"})
     private Imovel imovel;
     
     @OneToMany(mappedBy = "aluguel", cascade = CascadeType.ALL, orphanRemoval = true)
