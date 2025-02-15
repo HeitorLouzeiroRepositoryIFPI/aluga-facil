@@ -1,10 +1,4 @@
-import axios from 'axios';
-import { UploadService } from './upload';
-
-const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
-});
-
+import api from '@/services/api';
 export interface Administrador {
   id: number;
   nome: string;

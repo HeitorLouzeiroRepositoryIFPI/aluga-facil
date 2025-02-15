@@ -1,8 +1,4 @@
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
-});
+import api from '@/services/api';
 
 export interface UploadResponse {
   url: string;
