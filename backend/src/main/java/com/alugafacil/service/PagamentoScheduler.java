@@ -21,7 +21,7 @@ public class PagamentoScheduler {
     @Autowired
     private PagamentoRepository pagamentoRepository;
 
-    @Scheduled(cron = "0 5 0 * * *", zone = "America/Sao_Paulo") // Executa todos os dias às 00:03 (horário de Brasília)
+    @Scheduled(cron = "0 0 0 * * *", zone = "America/Sao_Paulo") // Executa todos os dias às 00:03 (horário de Brasília)
     @Transactional
     public void atualizarStatusPagamentos() {
         LocalDateTime agora = LocalDateTime.now(ZoneId.of("America/Sao_Paulo"));
